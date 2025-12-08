@@ -54,3 +54,13 @@ Thumbs.db
 # Electron build artifacts
 out/
 app-builds/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+*.egg
