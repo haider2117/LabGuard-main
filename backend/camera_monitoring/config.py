@@ -206,11 +206,11 @@ def get_gaze_direction(horizontal_angle):
         str: 'left', 'center', or 'right'
     
     Classification logic:
-        - angle < -15°: 'left' (extreme left, definitely not looking at screen)
-        - angle > 15°: 'right' (extreme right, definitely not looking at screen)
-        - -5° <= angle <= 5°: 'center' (using GAZE_CENTER_THRESHOLD, looking at screen)
-        - -15° <= angle < -5°: 'left' (looking left, off-center)
-        - 5° < angle <= 15°: 'right' (looking right, off-center)
+        - angle < GAZE_LEFT_THRESHOLD (-15°): 'left' (extreme left, definitely not looking at screen)
+        - angle > GAZE_RIGHT_THRESHOLD (15°): 'right' (extreme right, definitely not looking at screen)
+        - -GAZE_CENTER_THRESHOLD <= angle <= GAZE_CENTER_THRESHOLD (±5°): 'center' (looking at screen)
+        - GAZE_LEFT_THRESHOLD <= angle < -GAZE_CENTER_THRESHOLD (-15° to -5°): 'left' (looking left, off-center)
+        - GAZE_CENTER_THRESHOLD < angle <= GAZE_RIGHT_THRESHOLD (5° to 15°): 'right' (looking right, off-center)
     """
     # Extreme left: angle < GAZE_LEFT_THRESHOLD (-15°)
     if horizontal_angle < GAZE_LEFT_THRESHOLD:
@@ -221,14 +221,15 @@ def get_gaze_direction(horizontal_angle):
         return 'right'
     
     # Center: within GAZE_CENTER_THRESHOLD (±5°)
+    # This uses GAZE_CENTER_THRESHOLD to properly classify center gaze
     if -GAZE_CENTER_THRESHOLD <= horizontal_angle <= GAZE_CENTER_THRESHOLD:
         return 'center'
     
-    # Off-center left: between -15° and -5°
+    # Off-center left: between GAZE_LEFT_THRESHOLD and -GAZE_CENTER_THRESHOLD (-15° to -5°)
     if horizontal_angle < 0:
         return 'left'
     
-    # Off-center right: between 5° and 15°
+    # Off-center right: between GAZE_CENTER_THRESHOLD and GAZE_RIGHT_THRESHOLD (5° to 15°)
     return 'right'
 
 
