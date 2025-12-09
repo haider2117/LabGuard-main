@@ -19,6 +19,8 @@
     "rebuild": "node scripts/rebuild-sqlite.js",
     "reset-db": "node scripts/reset-database.js",
     "download-models": "node backend/scripts/download-models.js",
+    "setup-camera": "node backend/scripts/setup-camera-monitoring.js",
+    "test-camera": "cd backend && py -3.11 -m camera_monitoring.camera_processor",
     "cleanup-db": "node backend/scripts/cleanup-test-data.js",
     "clear-audit-logs": "node backend/scripts/clear-audit-logs.js",
     "postinstall": "npm run download-models",

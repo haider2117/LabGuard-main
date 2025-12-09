@@ -121,29 +121,29 @@ This document tracks all implementation tasks for the camera-based monitoring mo
 - [✅] Test IPC communication
 
 ### 2.3 Preload Script Updates
-- [⬜] Update `backend/app/preload.js` with camera IPC methods
-- [⬜] Expose `camera.startTest()` method
-- [⬜] Expose `camera.stopTest()` method
-- [⬜] Expose `camera.getStatus()` method
-- [⬜] Expose `camera.onStatusUpdate()` event listener
-- [⬜] Test preload script functionality
+- [✅] Update `backend/app/preload.js` with camera IPC methods
+- [✅] Expose `camera.startTest()` method
+- [✅] Expose `camera.stopTest()` method
+- [✅] Expose `camera.getStatus()` method
+- [✅] Expose `camera.onStatusUpdate()` event listener
+- [✅] Test preload script functionality
 
 ### 2.4 Setup Script
-- [⬜] Create `backend/scripts/setup-camera-monitoring.js`
-- [⬜] Check Python installation
-- [⬜] Check Python version (3.9-3.11)
-- [⬜] Install Python dependencies from `python_requirements.txt`
-- [⬜] Download YOLOv8n model if missing
-- [⬜] Verify MediaPipe installation
-- [⬜] Test camera access
-- [⬜] Create necessary directories
-- [⬜] Add error messages and user guidance
+- [✅] Create `backend/scripts/setup-camera-monitoring.js`
+- [✅] Check Python installation
+- [✅] Check Python version (3.9-3.11)
+- [✅] Install Python dependencies from `python_requirements.txt`
+- [✅] Download YOLOv8n model if missing
+- [✅] Verify MediaPipe installation
+- [✅] Test camera access
+- [✅] Create necessary directories
+- [✅] Add error messages and user guidance
 
 ### 2.5 Package.json Updates
-- [⬜] Add `setup-camera` script to `package.json`
-- [⬜] Add `test-camera` script to `package.json`
-- [⬜] Update `postinstall` script to run setup (optional)
-- [⬜] Document new scripts in README
+- [✅] Add `setup-camera` script to `package.json`
+- [✅] Add `test-camera` script to `package.json`
+- [✅] Update `postinstall` script to run setup (optional)
+- [✅] Document new scripts in README
 
 ---
 
@@ -353,12 +353,12 @@ This document tracks all implementation tasks for the camera-based monitoring mo
 
 ### Overall Progress
 - **Phase 1 (Python Backend)**: 59/59 tasks completed (100.0%)
-- **Phase 2 (Node.js Integration)**: 15/20 tasks completed (75.0%)
+- **Phase 2 (Node.js Integration)**: 34/34 tasks completed (100.0%)
 - **Phase 3 (Frontend UI)**: 0/28 tasks completed (0%)
 - **Phase 4 (Testing & Refinement)**: 0/24 tasks completed (0%)
 - **Phase 5 (Future Integration)**: 0/15 tasks completed (0%)
 
-**Total**: 74/146 tasks completed (50.7%)
+**Total**: 93/160 tasks completed (58.1%)
 
 ### Current Phase
 **Status**: In Progress  

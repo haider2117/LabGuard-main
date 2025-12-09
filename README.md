@@ -41,6 +41,7 @@ LAB-Guard/
 - Node.js v14 or higher
 - Windows 10/11
 - Webcam (for face authentication)
+- Python 3.9, 3.10, or 3.11 (for camera monitoring module)
 
 ### Installation
 ```bash
@@ -63,6 +64,18 @@ npm start
 ```bash
 npm run download-models
 ```
+
+### Setup Camera Monitoring Module
+```bash
+npm run setup-camera
+```
+Sets up Python environment, installs dependencies, downloads YOLOv8n model, and verifies camera access.
+
+### Test Camera Monitoring
+```bash
+npm run test-camera
+```
+Runs the camera processor standalone to test detection capabilities.
 
 ## 📚 Documentation
 
@@ -121,6 +134,8 @@ npm start              # Start production app
 npm run dev            # Development mode (starts both React & Electron)
 npm run build          # Build React app
 npm run download-models # Download AI models
+npm run setup-camera   # Setup camera monitoring module (Python dependencies, models)
+npm run test-camera    # Test camera monitoring processor standalone
 npm run rebuild        # Rebuild better-sqlite3 for Electron
 npm run reset-db       # Reset database to clean state
 npm test               # Run tests
