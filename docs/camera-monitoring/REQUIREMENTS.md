@@ -63,7 +63,7 @@ This document specifies the functional and non-functional requirements for the c
 - **Roll** (tilt): -30° to +30°
 
 **Violation Logic**:
-- Head facing screen: Yaw ∈ [-30°, 30°], Pitch ∈ [-20°, 20°]
+- Head facing screen: Yaw ∈ [-30°, 30°], Pitch ∈ [-35°, 20°] (expanded downward for typing scenarios)
 - Head not facing screen = Violation (looking away)
 
 ---
@@ -80,10 +80,11 @@ This document specifies the functional and non-functional requirements for the c
 - ✅ Display gaze direction indicator
 - ✅ Log gaze direction changes
 
-**Gaze Classification**:
-- **Left**: Horizontal angle < -15°
-- **Center**: Horizontal angle ∈ [-15°, 15°]
-- **Right**: Horizontal angle > 15°
+**Gaze Classification** (as implemented):
+- **Left**: Horizontal angle < -20° (extreme left)
+- **Center**: Horizontal angle ∈ [-12°, 12°] (looking at screen)
+- **Right**: Horizontal angle > 20° (extreme right)
+- **Note**: Values tuned for stability (reduces false fluctuations between left/center/right)
 
 **Violation Logic**:
 - Gaze center = Normal (looking at screen)
@@ -438,4 +439,5 @@ The camera monitoring module is considered successful if:
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2024-01-15 | 1.0 | Initial requirements document | LabGuard Team |
+| 2024-12-09 | 1.1 | Updated gaze thresholds and head pose ranges to match implementation values. Gaze: -20°/12°/20° (left/center/right), Head pose pitch: -35° to 20° (expanded for typing scenarios). | AI Assistant |
 

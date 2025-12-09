@@ -115,8 +115,7 @@ LabGuard-main/
 │   │   │   ├── yolov8n.pt           # YOLOv8 nano model
 │   │   │   └── .gitkeep
 │   │   ├── utils/
-│   │   │   ├── __init__.py
-│   │   │   └── geometry.py          # Head pose & geometry utils
+│   │   │   └── __init__.py          # Utility module (geometry inline in detectors)
 │   │   └── config.py                # Configuration constants
 │   ├── services/
 │   │   └── cameraMonitoringService.js  # Node.js IPC bridge
@@ -192,12 +191,16 @@ LabGuard-main/
 - `detect_blink(ear, threshold)` - Blink detection
 - `is_facing_screen(head_pose)` - Check orientation
 
-#### `utils/geometry.py` (Geometry Utilities)
-**Responsibilities**:
-- Head pose calculations
-- Coordinate transformations
-- Angle calculations
-- Distance measurements
+#### Geometry Utilities (Inline)
+> **Note**: Originally planned as `utils/geometry.py`, but geometry calculations
+> are now implemented inline within `face_analyzer.py` and `gaze_estimator.py`
+> to avoid a planning sequencing issue and reduce unnecessary abstraction.
+
+**Functionality** (encapsulated in detector modules):
+- Head pose calculations (in `face_analyzer.py`)
+- Coordinate transformations (in `face_analyzer.py`)
+- Angle calculations (in `gaze_estimator.py`)
+- Distance/EAR measurements (in `gaze_estimator.py`)
 
 ### 2. Node.js Components
 
@@ -369,17 +372,17 @@ PHONE_CONFIDENCE_THRESHOLD = 0.5
 PERSON_CONFIDENCE_THRESHOLD = 0.6
 
 # Gaze estimation
-GAZE_LEFT_THRESHOLD = -15  # degrees
-GAZE_RIGHT_THRESHOLD = 15   # degrees
-GAZE_CENTER_THRESHOLD = 5   # degrees
+GAZE_LEFT_THRESHOLD = -20.0   # degrees (negative = left)
+GAZE_RIGHT_THRESHOLD = 20.0   # degrees (positive = right)
+GAZE_CENTER_THRESHOLD = 12.0  # tolerance for "center"
 
 # Blink detection
 BLINK_EAR_THRESHOLD = 0.25
 BLINK_FRAME_COUNT = 3  # Consecutive frames for blink confirmation
 
 # Head pose (degrees)
-HEAD_FACING_SCREEN_YAW_RANGE = (-30, 30)
-HEAD_FACING_SCREEN_PITCH_RANGE = (-20, 20)
+HEAD_FACING_SCREEN_YAW_RANGE = (-30.0, 30.0)
+HEAD_FACING_SCREEN_PITCH_RANGE = (-35.0, 20.0)  # Expanded downward to account for typing
 
 # Performance
 CAMERA_WIDTH = 640
@@ -497,4 +500,13 @@ Pillow==10.1.0
 - ⚠️ All violations simultaneously
 - ⚠️ Camera access denied
 - ⚠️ Python process crash recovery
+
+---
+
+## Change Log
+
+| Date | Changes | Author |
+|------|---------|--------|
+| 2024-01-15 | Initial design document created | LabGuard Team |
+| 2024-12-09 | Updated threshold values to match implementation: GAZE thresholds (-20/20/12°), HEAD_POSE pitch range (-35° to 20°). Removed geometry.py reference (now inline in detectors). | AI Assistant |
 

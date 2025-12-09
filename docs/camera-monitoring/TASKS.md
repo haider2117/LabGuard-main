@@ -66,13 +66,15 @@ This document tracks all implementation tasks for the camera-based monitoring mo
 - [✅] Return gaze direction, blink status, screen-facing status
 - [✅] Test with sample data
 
-### 1.6 Geometry Utilities
-- [✅] Create `backend/camera_monitoring/utils/geometry.py`
-- [✅] Implement head pose calculation helpers
-- [✅] Implement coordinate transformation functions
-- [✅] Implement angle calculation functions
-- [✅] Implement distance measurement functions
-- [✅] Add unit tests for geometry functions
+### ~~1.6 Geometry Utilities~~ (REMOVED - Planning Error)
+> **Note**: This section was removed because it was a planning sequencing error.
+> The `geometry.py` utility module was scheduled to be created AFTER the modules
+> that would have used it (face_analyzer.py, gaze_estimator.py). Since those 
+> modules already implemented their own inline geometry calculations and the
+> pipeline is working correctly, this task was removed to avoid unnecessary
+> refactoring risk. The geometry utilities would have provided reusable functions
+> for distance, angle, and coordinate calculations, but these are now encapsulated
+> within the individual detector modules.
 
 ### 1.7 Main Camera Processor
 - [✅] Create `backend/camera_monitoring/camera_processor.py`
@@ -229,7 +231,6 @@ This document tracks all implementation tasks for the camera-based monitoring mo
 - [⬜] Write unit tests for `object_detector.py`
 - [⬜] Write unit tests for `face_analyzer.py`
 - [⬜] Write unit tests for `gaze_estimator.py`
-- [⬜] Write unit tests for `geometry.py`
 - [⬜] Write unit tests for `cameraMonitoringService.js`
 - [⬜] Run all unit tests
 - [⬜] Fix failing tests
@@ -336,28 +337,28 @@ This document tracks all implementation tasks for the camera-based monitoring mo
 ## Dependencies & Prerequisites
 
 ### Required Before Starting
-- [⬜] Python 3.9-3.11 installed or plan for embedded Python
-- [⬜] Webcam available for testing
-- [⬜] Node.js and Electron environment working
-- [⬜] Git repository access
+- [✅] Python 3.9-3.11 installed or plan for embedded Python (Python 3.11 configured)
+- [✅] Webcam available for testing (tested with camera_processor.py)
+- [✅] Node.js and Electron environment working (existing LabGuard setup)
+- [✅] Git repository access
 
 ### External Resources
-- [⬜] YOLOv8n model download (Ultralytics)
-- [⬜] MediaPipe models (auto-downloaded)
-- [⬜] Test images/videos for development
+- [✅] YOLOv8n model download (Ultralytics) - auto-downloads on first use
+- [✅] MediaPipe models (auto-downloaded on first use)
+- [⬜] Test images/videos for development (optional - using live webcam)
 
 ---
 
 ## Progress Tracking
 
 ### Overall Progress
-- **Phase 1 (Python Backend)**: 65/65 tasks completed (100.0%)
+- **Phase 1 (Python Backend)**: 59/59 tasks completed (100.0%)
 - **Phase 2 (Node.js Integration)**: 0/20 tasks completed (0%)
 - **Phase 3 (Frontend UI)**: 0/28 tasks completed (0%)
-- **Phase 4 (Testing & Refinement)**: 0/25 tasks completed (0%)
+- **Phase 4 (Testing & Refinement)**: 0/24 tasks completed (0%)
 - **Phase 5 (Future Integration)**: 0/15 tasks completed (0%)
 
-**Total**: 65/126 tasks completed (51.6%)
+**Total**: 59/146 tasks completed (40.4%)
 
 ### Current Phase
 **Status**: In Progress  
@@ -367,6 +368,12 @@ This document tracks all implementation tasks for the camera-based monitoring mo
 - None currently
 
 ### Notes
+- **2024-12-09**: Removed Section 1.6 (Geometry Utilities) - Planning sequencing error identified.
+  The `geometry.py` module was scheduled after the detector modules that would have used it.
+  Since `face_analyzer.py` and `gaze_estimator.py` already have working inline implementations
+  of all necessary geometry calculations, and the pipeline is fully functional, this task
+  was removed to avoid unnecessary refactoring risk. Files removed: `geometry.py`, `test_geometry.py`.
+  Updated `utils/__init__.py` to reflect removal.
 - Add notes here as implementation progresses
 - Document any deviations from plan
 - Record important decisions
@@ -395,17 +402,17 @@ npm run test-camera
 npm run dev
 ```
 
-### Testing Checklist
-- [ ] Camera access works
-- [ ] Models load successfully
-- [ ] Phone detection works
-- [ ] Person counting works
-- [ ] Head pose estimation works
-- [ ] Gaze direction works
-- [ ] Blink detection works
-- [ ] UI updates in real-time
-- [ ] Violations are logged
-- [ ] Error handling works
+### Testing Checklist (Python Backend - Phase 1)
+- [x] Camera access works
+- [x] Models load successfully (YOLOv8n, MediaPipe)
+- [x] Phone detection works
+- [x] Person counting works
+- [x] Head pose estimation works
+- [x] Gaze direction works
+- [x] Blink detection works
+- [ ] UI updates in real-time (Phase 3)
+- [ ] Violations are logged (Phase 2/3)
+- [ ] Error handling works (partial - Python side done, Node.js/UI pending)
 
 ---
 
@@ -414,4 +421,5 @@ npm run dev
 | Date | Changes | Author |
 |------|---------|--------|
 | 2024-01-15 | Initial tasks document created | LabGuard Team |
+| 2024-12-09 | Removed Section 1.6 (Geometry Utilities) - Planning error. geometry.py was scheduled after the modules that would use it. Detectors have working inline implementations. Removed geometry.py, test_geometry.py, updated utils/__init__.py. Phase 1: 65→59 tasks, Phase 4: 25→24 tasks. | AI Assistant |
 
