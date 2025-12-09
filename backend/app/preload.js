@@ -50,6 +50,45 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getViolations: (examId) => ipcRenderer.invoke('monitoring:get-violations', examId),
   getStudentViolations: (examId) => ipcRenderer.invoke('monitoring:get-student-violations', examId),
 
+  // Camera monitoring (Python pipeline)
+  camera: {
+    startTest: (options) => ipcRenderer.invoke('camera:start-test', options),
+    stopTest: () => ipcRenderer.invoke('camera:stop-test'),
+    getStatus: () => ipcRenderer.invoke('camera:get-status'),
+    onStatusUpdate: (callback) => {
+      if (typeof callback !== 'function') {
+        return () => {};
+      }
+      const handler = (_event, data) => callback(data);
+      ipcRenderer.on('camera:status-update', handler);
+      return () => {
+        ipcRenderer.removeListener('camera:status-update', handler);
+      };
+    },
+    onError: (callback) => {
+      if (typeof callback !== 'function') {
+        return () => {};
+      }
+      const handler = (_event, error) => callback(error);
+      ipcRenderer.on('camera:error', handler);
+      ipcRenderer.on('camera:stderr', handler);
+      return () => {
+        ipcRenderer.removeListener('camera:error', handler);
+        ipcRenderer.removeListener('camera:stderr', handler);
+      };
+    },
+    onProcessExit: (callback) => {
+      if (typeof callback !== 'function') {
+        return () => {};
+      }
+      const handler = (_event, data) => callback(data);
+      ipcRenderer.on('camera:process-exit', handler);
+      return () => {
+        ipcRenderer.removeListener('camera:process-exit', handler);
+      };
+    }
+  },
+
   // Screenshot and report methods
   getScreenshot: (screenshotPath) => ipcRenderer.invoke('screenshot:get', screenshotPath),
   downloadScreenshot: (screenshotPath) => ipcRenderer.invoke('screenshot:download', screenshotPath),

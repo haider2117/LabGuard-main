@@ -11,12 +11,14 @@ const AuthService = require('../services/auth');
 const DatabaseService = require('../services/database'); // Using SQLite database
 const FileService = require('../services/files');
 const MonitoringController = require('../services/monitoringController');
+const CameraMonitoringService = require('../services/cameraMonitoringService');
 
 // Initialize services
 let authService;
 let dbService;
 let fileService;
 let monitoringController;
+let cameraMonitoringService;
 
 // Keep a global reference of the window object
 let mainWindow;
@@ -129,6 +131,17 @@ async function initializeServices() {
     monitoringController = new MonitoringController(dbService);
     setupMonitoringEventHandlers();
     console.log('Monitoring controller initialized');
+
+    console.log('Initializing camera monitoring service...');
+    cameraMonitoringService = new CameraMonitoringService({
+      pythonPath: process.env.CAMERA_PYTHON_PATH || 'py',
+      pythonArgs: process.env.CAMERA_PYTHON_ARGS
+        ? process.env.CAMERA_PYTHON_ARGS.split(' ')
+        : ['-3.11', '-m', 'camera_monitoring.camera_processor'],
+      cwd: path.join(__dirname, '..')
+    });
+    setupCameraMonitoringEventHandlers();
+    console.log('Camera monitoring service initialized');
 
     console.log('All services initialized successfully');
   } catch (error) {
@@ -505,6 +518,37 @@ function setupMonitoringEventHandlers() {
   });
 }
 
+// Camera monitoring status forwarding
+function setupCameraMonitoringEventHandlers() {
+  if (!cameraMonitoringService) {
+    return;
+  }
+
+  cameraMonitoringService.on('status', (status) => {
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('camera:status-update', status);
+    }
+  });
+
+  cameraMonitoringService.on('error', (error) => {
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('camera:error', error);
+    }
+  });
+
+  cameraMonitoringService.on('stderr', (message) => {
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('camera:stderr', message);
+    }
+  });
+
+  cameraMonitoringService.on('exit', (payload) => {
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('camera:process-exit', payload);
+    }
+  });
+}
+
 // Enhanced monitoring IPC handlers
 ipcMain.handle('monitoring:start', async (event, examId, studentId, allowedApps) => {
   try {
@@ -659,6 +703,52 @@ ipcMain.handle('monitoring:get-status', async (event) => {
       isActive: false,
       error: error.message
     };
+  }
+});
+
+// Camera monitoring IPC handlers
+ipcMain.handle('camera:start-test', async (event, options) => {
+  try {
+    if (!cameraMonitoringService) {
+      return { success: false, error: 'Camera monitoring service not initialized' };
+    }
+
+    const result = cameraMonitoringService.startMonitoring(options || {});
+    return {
+      success: result.success,
+      pid: result.pid,
+      args: result.args,
+      error: result.error
+    };
+  } catch (error) {
+    console.error('Error starting camera monitoring:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('camera:stop-test', async () => {
+  try {
+    if (!cameraMonitoringService) {
+      return { success: false, error: 'Camera monitoring service not initialized' };
+    }
+
+    return cameraMonitoringService.stopMonitoring();
+  } catch (error) {
+    console.error('Error stopping camera monitoring:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('camera:get-status', async () => {
+  try {
+    if (!cameraMonitoringService) {
+      return { success: false, error: 'Camera monitoring service not initialized' };
+    }
+
+    return { success: true, status: cameraMonitoringService.getStatus() };
+  } catch (error) {
+    console.error('Error getting camera monitoring status:', error);
+    return { success: false, error: error.message };
   }
 });
 
