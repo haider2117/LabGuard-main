@@ -8,6 +8,12 @@ This package contains:
 """
 
 from .object_detector import ObjectDetector, create_detector
+from .face_analyzer import FaceAnalyzer, create_face_analyzer
+from .gaze_estimator import GazeEstimator, create_gaze_estimator
 
-__all__ = ['ObjectDetector', 'create_detector']
+__all__ = [
+    'ObjectDetector', 'create_detector',
+    'FaceAnalyzer', 'create_face_analyzer',
+    'GazeEstimator', 'create_gaze_estimator'
+]
 

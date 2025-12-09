@@ -36,10 +36,20 @@ PHONE_VIOLATION_CLEAR_TIMEOUT = 2.0
 
 # Gaze direction thresholds (degrees)
 # Horizontal angle from center of screen
-GAZE_LEFT_THRESHOLD = -15.0   # degrees (negative = left)
-GAZE_RIGHT_THRESHOLD = 15.0    # degrees (positive = right)
-GAZE_CENTER_THRESHOLD = 5.0    # degrees (tolerance for "center")
+GAZE_LEFT_THRESHOLD = -20.0   # degrees (negative = left)
+GAZE_RIGHT_THRESHOLD = 20.0   # degrees (positive = right)
+GAZE_CENTER_THRESHOLD = 12.0  # tolerance for "center"
 
+# Gaze scaling and smoothing
+# Iris moves ~0.3 of eye width for ~30 degrees gaze, so factor ≈ 100
+GAZE_SCALING_FACTOR = 100.0        # converts normalized eye offset to degrees
+GAZE_HEAD_YAW_COMP_FACTOR = 0.3    # how much head yaw contributes to combined gaze
+GAZE_SMOOTHING_WINDOW = 3          # EMA equivalent window (larger = smoother, slower response)
+
+# Minimum eye geometry quality (in pixels) to trust gaze
+GAZE_MIN_EYE_WIDTH_PX = 12.0       # Lower threshold to work with smaller faces/farther distances
+# Minimum quality score (0-1) to accept a gaze measurement
+GAZE_MIN_QUALITY = 0.3             # More permissive - quality is tracked over time
 # Gaze violation timeout (seconds)
 # Student must look away for this duration before violation triggers
 GAZE_VIOLATION_TIMEOUT = 3.0
@@ -72,7 +82,8 @@ HEAD_FACING_SCREEN_YAW_MIN = -30.0
 HEAD_FACING_SCREEN_YAW_MAX = 30.0
 
 # Pitch: up-down rotation (-45 to +45)
-HEAD_FACING_SCREEN_PITCH_MIN = -20.0
+# Expanded downward range to account for typing (camera on top, person looks down at screen)
+HEAD_FACING_SCREEN_PITCH_MIN = -35.0  # Allow more downward looking (typing scenario)
 HEAD_FACING_SCREEN_PITCH_MAX = 20.0
 
 # Roll: tilt rotation (-30 to +30)
@@ -206,11 +217,11 @@ def get_gaze_direction(horizontal_angle):
         str: 'left', 'center', or 'right'
     
     Classification logic:
-        - angle < GAZE_LEFT_THRESHOLD (-15°): 'left' (extreme left, definitely not looking at screen)
-        - angle > GAZE_RIGHT_THRESHOLD (15°): 'right' (extreme right, definitely not looking at screen)
-        - -GAZE_CENTER_THRESHOLD <= angle <= GAZE_CENTER_THRESHOLD (±5°): 'center' (looking at screen)
-        - GAZE_LEFT_THRESHOLD <= angle < -GAZE_CENTER_THRESHOLD (-15° to -5°): 'left' (looking left, off-center)
-        - GAZE_CENTER_THRESHOLD < angle <= GAZE_RIGHT_THRESHOLD (5° to 15°): 'right' (looking right, off-center)
+        - angle < GAZE_LEFT_THRESHOLD (-25°): 'left' (extreme left, definitely not looking at screen)
+        - angle > GAZE_RIGHT_THRESHOLD (25°): 'right' (extreme right, definitely not looking at screen)
+        - -GAZE_CENTER_THRESHOLD <= angle <= GAZE_CENTER_THRESHOLD (±12°): 'center' (looking at screen)
+        - GAZE_LEFT_THRESHOLD <= angle < -GAZE_CENTER_THRESHOLD (-25° to -12°): 'left' (looking left, off-center)
+        - GAZE_CENTER_THRESHOLD < angle <= GAZE_RIGHT_THRESHOLD (12° to 25°): 'right' (looking right, off-center)
     """
     # Extreme left: angle < GAZE_LEFT_THRESHOLD (-15°)
     if horizontal_angle < GAZE_LEFT_THRESHOLD:
