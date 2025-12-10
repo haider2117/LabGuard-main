@@ -147,6 +147,38 @@
   transform: none;
 }
 
+/* Camera Test Button */
+.camera-test-button {
+  padding: 12px;
+  background: transparent;
+  color: #4A5FBF;
+  border: 2px solid #4A5FBF;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+
+.camera-test-button:hover:not(:disabled) {
+  background: rgba(74, 95, 191, 0.1);
+}
+
+.camera-test-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.camera-test-button svg {
+  width: 20px;
+  height: 20px;
+}
+
 .loading-spinner {
   width: 18px;
   height: 18px;
