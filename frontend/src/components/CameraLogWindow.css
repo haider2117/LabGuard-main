@@ -1,0 +1,170 @@
+/* Camera Log Window - Simplified for Exam Page */
+
+.camera-log-window {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  max-height: 400px;
+  overflow: hidden;
+}
+
+.camera-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border-light);
+  background-color: var(--color-bg-tertiary);
+}
+
+.log-header-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.log-icon {
+  font-size: 20px;
+}
+
+.log-header-title h3 {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.clear-log-button {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-medium);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-weight: var(--font-medium);
+}
+
+.clear-log-button:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-dark);
+}
+
+.clear-log-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.log-error-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-error-light);
+  color: #991B1B;
+  padding: var(--space-2) var(--space-5);
+  font-size: var(--text-sm);
+  border-bottom: 1px solid #FCA5A5;
+}
+
+.error-icon {
+  font-size: 16px;
+}
+
+.error-text {
+  flex: 1;
+}
+
+.camera-log-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-3);
+  background-color: var(--color-bg-tertiary);
+  min-height: 150px;
+  max-height: 300px;
+}
+
+.no-violations {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  font-style: italic;
+}
+
+.log-item {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  align-items: flex-start;
+  background-color: white;
+  border-left: 3px solid transparent;
+}
+
+.log-item.warning {
+  background: #FFF8E1;
+  border-left-color: #FFC107;
+}
+
+.log-item.error {
+  background: #FFEBEE;
+  border-left-color: #F44336;
+}
+
+.log-item.info {
+  background: #E3F2FD;
+  border-left-color: #2196F3;
+}
+
+.log-time {
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+.log-type {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  font-size: 9px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+.log-message {
+  color: var(--color-text-primary);
+  flex: 1;
+  word-break: break-word;
+  font-size: var(--text-xs);
+}
+
+/* Scrollbar Styling */
+.camera-log-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.camera-log-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.camera-log-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.camera-log-list::-webkit-scrollbar-thumb:hover {
+  background: #bbb;
+}
+

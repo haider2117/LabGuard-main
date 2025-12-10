@@ -68,7 +68,47 @@ function App() {
   const handleLogout = async () => {
     try {
       if (isElectron()) {
-        await (window as any).electronAPI.logout();
+        const api = (window as any).electronAPI;
+        
+        // Stop monitoring services before logout (safety measure)
+        try {
+          // Stop app-level monitoring
+          try {
+            const monitoringStatus = await api.getMonitoringStatus();
+            // monitoring:get-status returns { success: true, isMonitoring: ..., ... } (spread status)
+            if (monitoringStatus && monitoringStatus.success && monitoringStatus.isMonitoring) {
+              console.log('[Logout] Stopping app-level monitoring...');
+              await api.stopMonitoring().catch((err: any) => {
+                console.warn('[Logout] Error stopping app-level monitoring:', err);
+              });
+            }
+          } catch (monitoringErr) {
+            console.warn('[Logout] Could not check/stop app-level monitoring:', monitoringErr);
+          }
+
+          // Stop camera monitoring
+          try {
+            const cameraApi = api.camera;
+            if (cameraApi) {
+              const cameraStatus = await cameraApi.getStatus();
+              // camera:get-status returns { success: true, status: { isMonitoring: ..., ... } }
+              if (cameraStatus && cameraStatus.success && cameraStatus.status?.isMonitoring) {
+                console.log('[Logout] Stopping camera monitoring...');
+                await cameraApi.stopTest().catch((err: any) => {
+                  console.warn('[Logout] Error stopping camera monitoring:', err);
+                });
+              }
+            }
+          } catch (cameraErr) {
+            console.warn('[Logout] Could not check/stop camera monitoring:', cameraErr);
+          }
+        } catch (monitoringError) {
+          console.warn('[Logout] Error stopping monitoring services:', monitoringError);
+          // Continue with logout even if monitoring stop fails
+        }
+
+        // Perform logout (backend will also stop monitoring, but this is a safety measure)
+        await api.logout();
       }
       // Always clear user state
       setUser(null);

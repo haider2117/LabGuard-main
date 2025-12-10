@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import JSZip from 'jszip';
+import CameraLogWindow from './CameraLogWindow';
 import './ExamPage.css';
 
 // Configure PDF.js worker
@@ -48,6 +49,7 @@ const ExamPage: React.FC<ExamPageProps> = ({ exam: initialExam, user, onBack, on
     const [examStarted, setExamStarted] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState<number>(-1);
     const [monitoringActive, setMonitoringActive] = useState(false);
+    const [cameraMonitoringActive, setCameraMonitoringActive] = useState(false);
     const [showSubmitDialog, setShowSubmitDialog] = useState(false);
     const [submittedFiles, setSubmittedFiles] = useState<File[]>([]);
     const [submissionStatus, setSubmissionStatus] = useState<{
@@ -140,10 +142,39 @@ const ExamPage: React.FC<ExamPageProps> = ({ exam: initialExam, user, onBack, on
                         console.error('Error stopping monitoring:', err);
                     });
                 }
+                // Stop camera monitoring
+                if (isElectron() && cameraMonitoringActive) {
+                    try {
+                        const cameraApi = (window as any).electronAPI.camera;
+                        cameraApi.stopTest().catch((err: any) => {
+                            console.error('Error stopping camera monitoring:', err);
+                        });
+                        setCameraMonitoringActive(false);
+                    } catch (err) {
+                        console.error('Error stopping camera monitoring:', err);
+                    }
+                }
                 onBack();
             }
         }
     }, [timeRemaining, examStarted, submissionStatus.submitted]);
+
+    // Cleanup: Stop camera monitoring when component unmounts or exam ends
+    useEffect(() => {
+        return () => {
+            // Cleanup on unmount
+            if (isElectron() && cameraMonitoringActive) {
+                try {
+                    const cameraApi = (window as any).electronAPI.camera;
+                    cameraApi.stopTest().catch((err: any) => {
+                        console.error('Error stopping camera monitoring on unmount:', err);
+                    });
+                } catch (err) {
+                    console.error('Error stopping camera monitoring on unmount:', err);
+                }
+            }
+        };
+    }, [cameraMonitoringActive]);
 
     // Load submission status and check if exam was already started
     useEffect(() => {
@@ -227,6 +258,18 @@ const ExamPage: React.FC<ExamPageProps> = ({ exam: initialExam, user, onBack, on
                         console.log('✅ Monitoring is active - resuming exam session');
                         setExamStarted(true);
                         setMonitoringActive(true);
+                        
+                        // Check camera monitoring status
+                        try {
+                            const cameraApi = (window as any).electronAPI.camera;
+                            const cameraStatus = await cameraApi.getStatus();
+                            if (cameraStatus && cameraStatus.isMonitoring) {
+                                setCameraMonitoringActive(true);
+                            }
+                        } catch (err) {
+                            console.error('Error checking camera monitoring status:', err);
+                        }
+                        
                         return true;
                     } else {
                         console.log('❌ Monitoring not active - exam needs to be started');
@@ -361,6 +404,31 @@ const ExamPage: React.FC<ExamPageProps> = ({ exam: initialExam, user, onBack, on
                         setError('Warning: Monitoring failed to start - ' + result.error);
                     }
                 }
+
+                // Start camera monitoring
+                try {
+                    const cameraApi = (window as any).electronAPI.camera;
+                    const cameraStatus = await cameraApi.getStatus();
+                    
+                    if (cameraStatus && cameraStatus.isMonitoring) {
+                        // Camera monitoring already active
+                        setCameraMonitoringActive(true);
+                        console.log('Camera monitoring already active');
+                    } else {
+                        // Start camera monitoring
+                        const cameraResult = await cameraApi.startTest({ debug: false });
+                        if (cameraResult.success) {
+                            setCameraMonitoringActive(true);
+                            console.log('Camera monitoring started');
+                        } else {
+                            console.warn('Camera monitoring failed to start:', cameraResult.error);
+                            // Don't block exam start if camera monitoring fails
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error starting camera monitoring:', err);
+                    // Don't block exam start if camera monitoring fails
+                }
             }
         } catch (err) {
             setError('Failed to start exam: ' + (err as Error).message);
@@ -447,6 +515,18 @@ const ExamPage: React.FC<ExamPageProps> = ({ exam: initialExam, user, onBack, on
             if (isElectron() && monitoringActive) {
                 await (window as any).electronAPI.stopMonitoring();
                 setMonitoringActive(false);
+            }
+
+            // Stop camera monitoring
+            if (isElectron() && cameraMonitoringActive) {
+                try {
+                    const cameraApi = (window as any).electronAPI.camera;
+                    await cameraApi.stopTest();
+                    setCameraMonitoringActive(false);
+                    console.log('Camera monitoring stopped');
+                } catch (err) {
+                    console.error('Error stopping camera monitoring:', err);
+                }
             }
 
             setExamStarted(false);
@@ -661,6 +741,11 @@ const ExamPage: React.FC<ExamPageProps> = ({ exam: initialExam, user, onBack, on
                             ))}
                         </div>
                     </div>
+
+                    {/* Camera Monitoring Log */}
+                    {examStarted && (
+                        <CameraLogWindow isActive={cameraMonitoringActive} />
+                    )}
 
                     {/* Submission Card */}
                     {examStarted && (

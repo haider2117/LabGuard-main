@@ -179,9 +179,45 @@ ipcMain.handle('auth:login', async (event, credentials) => {
 
 ipcMain.handle('auth:logout', async (event) => {
   try {
+    // Stop all monitoring services before logout
+    console.log('[Logout] Stopping all monitoring services...');
+    
+    // Stop app-level monitoring
+    try {
+      if (monitoringController) {
+        const monitoringStatus = monitoringController.getMonitoringStatus();
+        if (monitoringStatus && monitoringStatus.isActive) {
+          console.log('[Logout] Stopping app-level monitoring...');
+          await monitoringController.stopExamMonitoring();
+          console.log('[Logout] App-level monitoring stopped');
+        }
+      }
+    } catch (monitoringError) {
+      console.error('[Logout] Error stopping app-level monitoring:', monitoringError);
+      // Continue with logout even if monitoring stop fails
+    }
+
+    // Stop camera monitoring
+    try {
+      if (cameraMonitoringService) {
+        const cameraStatus = cameraMonitoringService.getStatus();
+        if (cameraStatus && cameraStatus.isMonitoring) {
+          console.log('[Logout] Stopping camera monitoring...');
+          cameraMonitoringService.stopMonitoring();
+          console.log('[Logout] Camera monitoring stopped');
+        }
+      }
+    } catch (cameraError) {
+      console.error('[Logout] Error stopping camera monitoring:', cameraError);
+      // Continue with logout even if camera monitoring stop fails
+    }
+
+    // Now perform the actual logout
     const result = await authService.logout();
+    console.log('[Logout] Logout completed successfully');
     return result;
   } catch (error) {
+    console.error('[Logout] Logout error:', error);
     return {
       success: false,
       error: error.message
