@@ -111,7 +111,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getFaceStats: () => ipcRenderer.invoke('admin:get-face-stats'),
   getSystemSettings: () => ipcRenderer.invoke('admin:get-system-settings'),
   updateSystemSettings: (settings) => ipcRenderer.invoke('admin:update-system-settings', settings),
-  
+
   // Snapshot configuration methods (admin)
   getSnapshotConfig: () => ipcRenderer.invoke('admin:get-snapshot-config'),
   updateSnapshotConfig: (config) => ipcRenderer.invoke('admin:update-snapshot-config', config),

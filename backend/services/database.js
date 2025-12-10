@@ -1296,7 +1296,7 @@ class DatabaseService {
       this.setSystemSetting('face_matching_threshold', 0.45, 'number', 'Face recognition matching threshold');
       this.setSystemSetting('max_login_attempts', 5, 'number', 'Maximum login attempts before lockout');
       this.setSystemSetting('session_timeout', 28800000, 'number', 'Session timeout in milliseconds (8 hours)');
-      
+
       // Initialize snapshot configuration settings (only if not already set)
       const existingSnapshotConfig = this.getSystemSetting('snapshot_enabled_violations');
       if (!existingSnapshotConfig) {

@@ -38,6 +38,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     step: 'credentials'
   });
   const [showCameraTest, setShowCameraTest] = useState(false);
+  const SHOW_CAMERA_TEST_BUTTON = false; // Keep feature but hide on sign-in page
 
   // Check if running in Electron
   const isElectron = () => {
@@ -366,8 +367,8 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             )}
           </button>
 
-          {/* Camera Test Button - Hidden in production, only for development */}
-          {process.env.NODE_ENV === 'development' && (
+          {/* Camera Test Button - Hidden via flag; keep feature available for future use */}
+          {SHOW_CAMERA_TEST_BUTTON && process.env.NODE_ENV === 'development' && (
           <button
             type="button"
             className="camera-test-button"
@@ -381,6 +382,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             Test Camera Module
           </button>
           )}
+          
         </form>
       </div>
     </div>
