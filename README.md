@@ -79,9 +79,18 @@ Runs the camera processor standalone to test detection capabilities.
 
 ## 📚 Documentation
 
+### General Documentation
 - **[Setup Guide](.github/information/SETUP.md)** - Complete installation and setup instructions
 - **[Debug Summary](.github/information/Debug_Summary.md)** - Common issues and fixes
 - **[Project Report](FYP.pdf)** - Complete project documentation
+
+### Camera Monitoring Documentation
+- **[User Guide](docs/camera-monitoring/USER_GUIDE.md)** - How to use the camera monitoring module
+- **[Configuration Guide](docs/camera-monitoring/CONFIGURATION.md)** - Configuration options and tuning
+- **[Testing Guide](docs/camera-monitoring/TESTING_GUIDE.md)** - Testing instructions
+- **[Implementation Tasks](docs/camera-monitoring/TASKS.md)** - Development progress tracking
+- **[Requirements](docs/camera-monitoring/REQUIREMENTS.md)** - Functional requirements
+- **[Design Document](docs/camera-monitoring/DESIGN.md)** - Technical architecture
 
 ## 🎯 Key Features
 
@@ -96,6 +105,13 @@ Runs the camera processor standalone to test detection capabilities.
 - Application switching detection
 - Screenshot evidence capture
 - Violation tracking and alerts
+- **Camera-based monitoring** (NEW)
+  - Mobile phone detection (YOLOv8n)
+  - Person counting (multiple person detection)
+  - Face detection and head pose estimation (MediaPipe)
+  - Gaze direction tracking
+  - Blink detection
+  - Real-time violation logging
 
 ### Role-Based Access
 - **Admin** - User management, system configuration
@@ -120,6 +136,11 @@ Runs the camera processor standalone to test detection capabilities.
 - Node.js runtime
 - SQLite database
 - Windows API integration
+- **Camera Monitoring** (Python subprocess)
+  - YOLOv8n for object detection
+  - MediaPipe Face Mesh for facial analysis
+  - OpenCV for camera capture
+  - JSON-based IPC communication
 
 ### Security
 - JWT authentication
@@ -157,6 +178,66 @@ npm test               # Run tests
 - **events** - Monitoring events
 - **app_violations** - Application violations
 - **audit_logs** - Security audit trail
+
+## 📹 Camera Monitoring Module
+
+The camera monitoring module provides real-time detection of exam violations using computer vision:
+
+### Features
+- **Phone Detection**: Detects mobile phones in camera frame (YOLOv8n)
+- **Person Counting**: Monitors for multiple persons in frame
+- **Face Analysis**: Detects face, estimates head pose (yaw, pitch, roll)
+- **Gaze Tracking**: Monitors gaze direction (left/center/right)
+- **Blink Detection**: Tracks eye blinks using EAR (Eye Aspect Ratio)
+
+### Usage
+
+**Test Camera Module:**
+1. Start the app: `npm run dev`
+2. On login screen, click **"Test Camera Module"** button
+3. Click **"Start Monitoring"** to begin detection
+4. View real-time status and violation logs
+
+**Setup (First Time):**
+```bash
+npm run setup-camera
+```
+
+This will:
+- Check Python 3.9-3.11 installation
+- Install Python dependencies (OpenCV, MediaPipe, Ultralytics)
+- Download YOLOv8n model (~6 MB)
+- Verify camera access
+
+### Architecture
+
+```
+Frontend (React) → Electron IPC → Node.js Service → Python Subprocess
+                                                      ↓
+                                              Camera + ML Models
+```
+
+- **Frontend**: `CameraTestModule.tsx` - UI for testing and monitoring
+- **Node.js**: `cameraMonitoringService.js` - Process management and IPC
+- **Python**: `camera_processor.py` - ML/CV processing pipeline
+- **Models**: YOLOv8n (object detection), MediaPipe (face analysis)
+
+### Configuration
+
+Edit `backend/camera_monitoring/config.py` to adjust:
+- Detection thresholds (phone confidence, person count)
+- Head pose ranges (facing screen angles)
+- Gaze thresholds (left/center/right)
+- Blink detection (EAR threshold)
+- Camera settings (resolution, FPS)
+- Performance (frame skip, processing time limits)
+
+### Documentation
+
+- **[Camera Monitoring Tasks](docs/camera-monitoring/TASKS.md)** - Implementation progress
+- **[Camera Monitoring Requirements](docs/camera-monitoring/REQUIREMENTS.md)** - Functional requirements
+- **[Camera Monitoring Design](docs/camera-monitoring/DESIGN.md)** - Technical architecture
+- **[Testing Guide](docs/camera-monitoring/TESTING_GUIDE.md)** - Testing instructions
 
 ## 🎓 Use Cases
 
