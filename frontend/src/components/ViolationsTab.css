@@ -49,20 +49,193 @@
   margin-bottom: 20px;
 }
 
-.violations-filter {
+/* Overview Cards */
+.violations-overview {
+  margin-bottom: 30px;
+}
+
+.overview-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.overview-card {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.overview-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-icon {
+  font-size: 40px;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.card-content {
+  flex: 1;
+}
+
+.card-value {
+  font-size: 32px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.card-label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Charts Section */
+.charts-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.chart-container {
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 900px;
+}
+
+.chart-container-full {
+  width: 100%;
+  max-width: 100%;
+}
+
+.chart-container h3 {
+  margin: 0 0 24px 0;
+  color: #333;
+  font-size: 22px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-container h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.chart-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.chart-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chart-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.chart-item-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.chart-item-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #007bff;
+  margin-left: 12px;
+}
+
+.chart-bar-container {
+  height: 36px;
+  background: #f5f5f5;
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chart-bar {
+  height: 100%;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  transition: width 0.3s ease;
+  position: relative;
+  min-width: 40px;
+}
+
+.chart-bar.blue {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.chart-bar-percentage {
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.3px;
+}
+
+/* Controls */
+.violations-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.violations-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .violations-filter label {
   font-weight: 600;
   color: #333;
+  font-size: 14px;
 }
 
 .violations-filter select {
@@ -71,14 +244,39 @@
   border-radius: 6px;
   font-size: 14px;
   min-width: 200px;
+  background: white;
+  cursor: pointer;
 }
 
+.toggle-logs-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.toggle-logs-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+}
+
+.toggle-logs-btn:active {
+  transform: translateY(0);
+}
+
+/* No Violations */
 .no-violations {
   background: white;
   padding: 60px 20px;
-  border-radius: 8px;
+  border-radius: 12px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .no-violations-icon {
@@ -98,10 +296,23 @@
   font-size: 16px;
 }
 
+/* Violations List */
 .violations-list {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .violation-card {
@@ -151,6 +362,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .violation-header-row h3 {
@@ -186,51 +399,40 @@
   font-weight: 600;
 }
 
-.violations-summary {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  margin-top: 30px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.violations-summary h3 {
-  margin: 0 0 20px 0;
-  color: #333;
-  font-size: 20px;
-}
-
-.summary-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 20px;
-}
-
-.stat-item {
-  text-align: center;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.stat-value {
-  display: block;
-  font-size: 36px;
-  font-weight: bold;
-  color: #007bff;
-  margin-bottom: 8px;
-}
-
-.stat-label {
-  display: block;
-  font-size: 14px;
-  color: #666;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .violations-tab {
     padding: 15px;
+  }
+
+  .overview-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-container {
+    padding: 20px;
+  }
+  
+  .chart-item-label {
+    font-size: 13px;
+  }
+
+  .violations-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .violations-filter {
+    width: 100%;
+  }
+
+  .violations-filter select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .toggle-logs-btn {
+    width: 100%;
   }
 
   .violation-card {
@@ -249,10 +451,6 @@
   }
 
   .violation-info {
-    grid-template-columns: 1fr;
-  }
-
-  .summary-stats {
     grid-template-columns: 1fr;
   }
 }

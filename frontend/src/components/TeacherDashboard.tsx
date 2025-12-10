@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import ExamCreationForm from './ExamCreationForm';
 import ExamList from './ExamList';
 import ViolationReport from './ViolationReport';
-import CourseManagement from './CourseManagement';
 import WebStorageService from '../services/webStorage';
 import './TeacherDashboard.css';
 
@@ -33,7 +32,7 @@ interface TeacherDashboardProps {
 }
 
 const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ user, onLogout }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'create' | 'manage' | 'courses' | 'monitoring'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'create' | 'manage' | 'monitoring'>('overview');
   const [exams, setExams] = useState<Exam[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,12 +147,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ user, onLogout }) =
           Manage Exams
         </button>
         <button
-          className={`nav-tab ${activeTab === 'courses' ? 'active' : ''}`}
-          onClick={() => setActiveTab('courses')}
-        >
-          My Courses
-        </button>
-        <button
           className={`nav-tab ${activeTab === 'monitoring' ? 'active' : ''}`}
           onClick={() => setActiveTab('monitoring')}
         >
@@ -255,12 +248,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ user, onLogout }) =
                 onRefresh={loadExams}
               />
             )}
-          </div>
-        )}
-
-        {activeTab === 'courses' && (
-          <div className="courses-tab">
-            <CourseManagement user={user} />
           </div>
         )}
 

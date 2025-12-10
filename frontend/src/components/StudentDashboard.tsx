@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import WebStorageService from '../services/webStorage';
 import WarningPanel from './WarningPanel';
-import StudentCourseEnrollment from './StudentCourseEnrollment';
 import PDFViewer from './PDFViewer';
 import ExamPage from './ExamPage';
 import ViolationsTab from './ViolationsTab';
@@ -52,7 +51,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, onLogout }) =
   const [currentSession, setCurrentSession] = useState<ExamSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'available' | 'history' | 'courses' | 'violations' | 'exam'>('available');
+  const [activeTab, setActiveTab] = useState<'available' | 'history' | 'violations' | 'exam'>('available');
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [monitoringStatus, setMonitoringStatus] = useState<{
     isActive: boolean;
@@ -535,12 +534,6 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, onLogout }) =
               Exam History ({examHistory.length})
             </button>
             <button
-              className={`tab ${activeTab === 'courses' ? 'active' : ''}`}
-              onClick={() => setActiveTab('courses')}
-            >
-              My Courses
-            </button>
-            <button
               className={`tab ${activeTab === 'violations' ? 'active' : ''}`}
               onClick={() => setActiveTab('violations')}
             >
@@ -628,12 +621,6 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, onLogout }) =
                     ))}
                   </div>
                 )}
-              </div>
-            )}
-
-            {activeTab === 'courses' && (
-              <div className="courses-tab">
-                <StudentCourseEnrollment user={user} />
               </div>
             )}
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import AdminCourseManagement from './AdminCourseManagement';
 import FaceCapture from './FaceCapture';
 import './AdminDashboard.css';
 
@@ -24,7 +25,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onLogout }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'logs' | 'stats'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'courses' | 'settings' | 'logs' | 'stats'>('users');
 
     // Settings state
     const [systemSettings, setSystemSettings] = useState({
@@ -327,6 +328,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onLogout }) => {
                     Users
                 </button>
                 <button
+                    className={`tab ${activeTab === 'courses' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('courses')}
+                >
+                    Courses
+                </button>
+                <button
                     className={`tab ${activeTab === 'settings' ? 'active' : ''}`}
                     onClick={() => setActiveTab('settings')}
                 >
@@ -354,6 +361,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onLogout }) => {
             )}
 
             <div className="dashboard-content">
+                {activeTab === 'courses' && (
+                    <div className="courses-tab">
+                        <AdminCourseManagement />
+                    </div>
+                )}
+
                 {activeTab === 'users' && (
                     <div className="users-tab">
                         <div className="users-header">

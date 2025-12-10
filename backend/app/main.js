@@ -1270,13 +1270,18 @@ ipcMain.handle('exam:unsubmit', async (event, examId) => {
 ipcMain.handle('course:create', async (event, courseData) => {
   try {
     const currentUser = authService.getCurrentUser();
-    if (!currentUser || currentUser.role !== 'teacher') {
-      return { success: false, error: 'Only teachers can create courses' };
+    if (!currentUser || currentUser.role !== 'admin') {
+      return { success: false, error: 'Only administrators can create courses' };
+    }
+
+    // Admin must specify teacherId in courseData
+    if (!courseData.teacherId) {
+      return { success: false, error: 'Teacher ID is required when creating a course' };
     }
 
     const course = dbService.createCourse({
       ...courseData,
-      teacherId: currentUser.userId
+      teacherId: courseData.teacherId
     });
 
     return { success: true, course };
@@ -1299,8 +1304,8 @@ ipcMain.handle('course:getByTeacher', async (event, teacherId) => {
 ipcMain.handle('course:enroll', async (event, courseId, studentId) => {
   try {
     const currentUser = authService.getCurrentUser();
-    if (!currentUser || (currentUser.role !== 'teacher' && currentUser.role !== 'admin')) {
-      return { success: false, error: 'Unauthorized' };
+    if (!currentUser || currentUser.role !== 'admin') {
+      return { success: false, error: 'Only administrators can enroll students in courses' };
     }
 
     const enrollment = dbService.enrollStudent(courseId, studentId);
@@ -1365,13 +1370,8 @@ ipcMain.handle('course:getAllCourses', async (event) => {
 
 ipcMain.handle('course:selfEnroll', async (event, courseId) => {
   try {
-    const currentUser = authService.getCurrentUser();
-    if (!currentUser || currentUser.role !== 'student') {
-      return { success: false, error: 'Only students can self-enroll' };
-    }
-
-    const enrollment = dbService.enrollStudent(courseId, currentUser.userId);
-    return { success: true, enrollment };
+    // Self-enrollment is disabled - only admins can enroll students
+    return { success: false, error: 'Self-enrollment is disabled. Please contact an administrator to enroll in courses.' };
   } catch (error) {
     console.error('Error self-enrolling:', error);
     return { success: false, error: error.message };
