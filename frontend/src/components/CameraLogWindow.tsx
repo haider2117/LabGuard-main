@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import './CameraLogWindow.css';
 
 // TypeScript interfaces for camera status data (matches Python output)
@@ -41,6 +41,7 @@ interface CameraLogWindowProps {
 const CameraLogWindow: React.FC<CameraLogWindowProps> = ({ isActive }) => {
   const [violations, setViolations] = useState<ViolationEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showDetailedLogs, setShowDetailedLogs] = useState(false);
 
   // Refs for cleanup
   const unsubscribeStatusRef = useRef<(() => void) | null>(null);
@@ -57,6 +58,28 @@ const CameraLogWindow: React.FC<CameraLogWindowProps> = ({ isActive }) => {
       (window as any).electronAPI.camera &&
       typeof (window as any).electronAPI.camera.startTest === 'function';
   }, []);
+
+  // Calculate statistics from violations
+  const stats = useMemo(() => {
+    const phoneCount = violations.filter(v => v.type === 'phone').length;
+    const personCount = violations.filter(v => v.type === 'person').length;
+    const faceCount = violations.filter(v => v.type === 'face').length;
+    const postureCount = violations.filter(v => v.type === 'posture').length;
+    const gazeCount = violations.filter(v => v.type === 'gaze').length;
+    const errorCount = violations.filter(v => v.type === 'error').length;
+    const systemCount = violations.filter(v => v.type === 'system').length;
+
+    return {
+      phone: phoneCount,
+      multiplePersons: personCount,
+      noFace: faceCount,
+      notFacing: postureCount,
+      notLooking: gazeCount,
+      errors: errorCount,
+      system: systemCount,
+      total: violations.length
+    };
+  }, [violations]);
 
   // Add violation to log with debouncing
   const addViolation = useCallback((type: string, message: string, severity: ViolationEvent['severity'] = 'warning') => {
@@ -230,16 +253,27 @@ const CameraLogWindow: React.FC<CameraLogWindowProps> = ({ isActive }) => {
       <div className="camera-log-header">
         <div className="log-header-title">
           <span className="log-icon">📹</span>
-          <h3>Camera Monitoring Log</h3>
+          <h3>Camera Monitoring</h3>
         </div>
-        <button 
-          className="clear-log-button" 
-          onClick={handleClearLog}
-          disabled={violations.length === 0}
-          title="Clear log"
-        >
-          Clear
-        </button>
+        <div className="log-header-actions">
+          <button 
+            className="toggle-logs-btn"
+            onClick={() => setShowDetailedLogs(!showDetailedLogs)}
+            disabled={violations.length === 0}
+          >
+            {showDetailedLogs ? '📋 Hide Logs' : '📋 View Logs'}
+          </button>
+          {showDetailedLogs && (
+            <button 
+              className="clear-log-button" 
+              onClick={handleClearLog}
+              disabled={violations.length === 0}
+              title="Clear log"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
       
       {error && (
@@ -249,25 +283,68 @@ const CameraLogWindow: React.FC<CameraLogWindowProps> = ({ isActive }) => {
         </div>
       )}
 
-      <div className="camera-log-list">
-        {violations.length === 0 ? (
-          <p className="no-violations">No events recorded</p>
-        ) : (
-          violations.map(violation => (
-            <div 
-              key={violation.id} 
-              className={`log-item ${violation.severity}`}
-            >
-              <span className="log-time">{formatTimestamp(violation.timestamp)}</span>
-              <span className="log-type">[{violation.type}]</span>
-              <span className="log-message">{violation.message}</span>
+      {/* Statistics Summary */}
+      <div className="camera-stats-summary">
+        <div className="stats-grid">
+          <div className="stat-card stat-error">
+            <div className="stat-icon">📱</div>
+            <div className="stat-content">
+              <div className="stat-value">{stats.phone}</div>
+              <div className="stat-label">Phone Detection</div>
             </div>
-          ))
-        )}
+          </div>
+          <div className="stat-card stat-error">
+            <div className="stat-icon">👥</div>
+            <div className="stat-content">
+              <div className="stat-value">{stats.multiplePersons}</div>
+              <div className="stat-label">Multiple Persons</div>
+            </div>
+          </div>
+          <div className="stat-card stat-warning">
+            <div className="stat-icon">👤</div>
+            <div className="stat-content">
+              <div className="stat-value">{stats.noFace}</div>
+              <div className="stat-label">No Face Detected</div>
+            </div>
+          </div>
+          <div className="stat-card stat-warning">
+            <div className="stat-icon">↩️</div>
+            <div className="stat-content">
+              <div className="stat-value">{stats.notFacing}</div>
+              <div className="stat-label">Not Facing Screen</div>
+            </div>
+          </div>
+          <div className="stat-card stat-warning">
+            <div className="stat-icon">👁️</div>
+            <div className="stat-content">
+              <div className="stat-value">{stats.notLooking}</div>
+              <div className="stat-label">Not Looking at Screen</div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Detailed Logs (Collapsible) */}
+      {showDetailedLogs && (
+        <div className="camera-log-list">
+          {violations.length === 0 ? (
+            <p className="no-violations">No events recorded</p>
+          ) : (
+            violations.map(violation => (
+              <div 
+                key={violation.id} 
+                className={`log-item ${violation.severity}`}
+              >
+                <span className="log-time">{formatTimestamp(violation.timestamp)}</span>
+                <span className="log-type">[{violation.type}]</span>
+                <span className="log-message">{violation.message}</span>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
 export default CameraLogWindow;
-

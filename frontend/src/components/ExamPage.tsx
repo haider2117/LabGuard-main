@@ -59,6 +59,7 @@ const ExamPage: React.FC<ExamPageProps> = ({ exam: initialExam, user, onBack, on
     }>({ submitted: false });
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [zipContents, setZipContents] = useState<{ [key: string]: string[] }>({});
+    const [activeTab, setActiveTab] = useState<'question' | 'violations' | 'submission'>('question');
 
     const isElectron = () => !!(window as any).electronAPI;
 
@@ -626,17 +627,48 @@ const ExamPage: React.FC<ExamPageProps> = ({ exam: initialExam, user, onBack, on
                 </div>
             )}
 
-            {/* Main Content Layout */}
-            <div className="exam-main-layout">
-                {/* Left Side - Question Paper */}
-                <div className="exam-left-section">
-                    <div className="question-paper-section">
-                        <div className="section-header">
-                            <h2>📄 Question Paper</h2>
-                            {!examStarted && !checkingStatus && (
+            {/* Timer and Info Bar (Always Visible) */}
+            {examStarted && (
+                <div className="exam-info-bar">
+                    <div className="info-bar-content">
+                        <div className="timer-compact">
+                            <span className="timer-icon-small">⏱️</span>
+                            <div className="timer-compact-display">
+                                <span className={`timer-value ${timeRemaining > 0 && timeRemaining < 300 ? 'warning' : ''}`}>
+                                    {timeRemaining >= 0 ? formatTime(timeRemaining) : '--:--'}
+                                </span>
+                                <span className="timer-label-small">Time Remaining</span>
+                            </div>
+                        </div>
+                        <div className="monitoring-status-compact">
+                            <span className={`status-dot-small ${monitoringActive ? 'active' : 'inactive'}`}></span>
+                            <span className="monitoring-text">
+                                {monitoringActive ? 'Monitoring Active' : 'Monitoring Inactive'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Start Exam Section (Before Exam Starts) */}
+            {!examStarted && (
+                <div className="exam-start-section">
+                    <div className="start-exam-card">
+                        <div className="start-exam-content">
+                            <div className="start-exam-icon">🔒</div>
+                            <h2>Exam Not Started</h2>
+                            <p>Click "Start Exam" to begin and view the question paper</p>
+                            {!canStartExam() && (
+                                <div className="exam-status-notice">
+                                    {new Date() < new Date(exam.start_time)
+                                        ? '⏰ Exam has not started yet'
+                                        : '⏰ Exam has ended'}
+                                </div>
+                            )}
+                            {canStartExam() && !checkingStatus && (
                                 <button
                                     onClick={handleStartExam}
-                                    className="start-exam-btn-inline"
+                                    className="start-exam-btn-large"
                                     disabled={!canStartExam()}
                                 >
                                     🚀 Start Exam
@@ -649,144 +681,170 @@ const ExamPage: React.FC<ExamPageProps> = ({ exam: initialExam, user, onBack, on
                                 </div>
                             )}
                         </div>
-
-                        {!examStarted && !canStartExam() && (
-                            <div className="exam-status-notice">
-                                {new Date() < new Date(exam.start_time)
-                                    ? '⏰ Exam has not started yet'
-                                    : '⏰ Exam has ended'}
-                            </div>
-                        )}
-
-                        {/* Exam Content */}
-                        {!examStarted ? (
-                            <div className="exam-not-started">
-                                <div className="not-started-icon">🔒</div>
-                                <h3>Exam Not Started</h3>
-                                <p>Click "Start Exam" to begin and view the question paper</p>
-                            </div>
-                        ) : loading ? (
-                            <div className="loading-content">
-                                <div className="loading-spinner"></div>
-                                <p>Processing exam content...</p>
-                            </div>
-                        ) : examContent && examContent.images.length > 0 ? (
-                            <div className="content-display">
-                                <div className="pdf-pages">
-                                    {examContent.images.map((img, index) => (
-                                        <div key={index} className="exam-page-image">
-                                            <img src={img} alt={`Page ${index + 1}`} />
-                                            <p className="page-number">Page {index + 1} of {examContent.images.length}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="no-content">
-                                <p>No exam paper available</p>
-                            </div>
-                        )}
                     </div>
                 </div>
+            )}
 
-                {/* Right Side - Exam Details & Submission */}
-                <div className="exam-right-section">
-                    {/* Timer Card */}
-                    <div className="timer-card">
-                        <div className="timer-header">
-                            <span className="timer-icon">⏱️</span>
-                            <span className="timer-label">Time Remaining</span>
-                        </div>
-                        <div className={`timer-display ${timeRemaining > 0 && timeRemaining < 300 ? 'warning' : ''}`}>
-                            {examStarted && timeRemaining >= 0 ? formatTime(timeRemaining) : '--:--'}
-                        </div>
-                        {examStarted && (
-                            <div className="timer-info">
-                                <p>Ends: {new Date(exam.end_time).toLocaleTimeString()}</p>
+            {/* Tabbed Content (After Exam Starts) */}
+            {examStarted && (
+                <div className="exam-tabbed-layout">
+                    {/* Tab Navigation */}
+                    <div className="exam-tabs">
+                        <button
+                            className={`exam-tab ${activeTab === 'question' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('question')}
+                        >
+                            <span className="tab-icon">📄</span>
+                            <span className="tab-label">Question Paper</span>
+                        </button>
+                        <button
+                            className={`exam-tab ${activeTab === 'violations' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('violations')}
+                        >
+                            <span className="tab-icon">⚠️</span>
+                            <span className="tab-label">Violations</span>
+                        </button>
+                        <button
+                            className={`exam-tab ${activeTab === 'submission' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('submission')}
+                        >
+                            <span className="tab-icon">📤</span>
+                            <span className="tab-label">Submission</span>
+                        </button>
+                    </div>
+
+                    {/* Tab Content */}
+                    <div className="exam-tab-content">
+                        {/* Question Paper Tab */}
+                        {activeTab === 'question' && (
+                            <div className="tab-panel question-panel">
+                                {loading ? (
+                                    <div className="loading-content">
+                                        <div className="loading-spinner"></div>
+                                        <p>Processing exam content...</p>
+                                    </div>
+                                ) : examContent && examContent.images.length > 0 ? (
+                                    <div className="content-display">
+                                        <div className="pdf-pages">
+                                            {examContent.images.map((img, index) => (
+                                                <div key={index} className="exam-page-image">
+                                                    <img src={img} alt={`Page ${index + 1}`} />
+                                                    <p className="page-number">Page {index + 1} of {examContent.images.length}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="no-content">
+                                        <p>No exam paper available</p>
+                                    </div>
+                                )}
                             </div>
                         )}
-                    </div>
 
-                    {/* Monitoring Status Card */}
-                    {examStarted && (
-                        <div className="monitoring-card">
-                            <div className="card-header">
-                                <span className="card-icon">👁️</span>
-                                <h3>Monitoring Status</h3>
-                            </div>
-                            <div className={`monitoring-indicator ${monitoringActive ? 'active' : 'inactive'}`}>
-                                <span className="status-dot"></span>
-                                <span>{monitoringActive ? 'Active' : 'Inactive'}</span>
-                            </div>
-                            {monitoringActive && (
-                                <p className="monitoring-message">
-                                    Your activity is being tracked for academic integrity
-                                </p>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Allowed Apps Card */}
-                    <div className="allowed-apps-card">
-                        <div className="card-header">
-                            <span className="card-icon">📱</span>
-                            <h3>Allowed Applications</h3>
-                        </div>
-                        <div className="allowed-apps-list">
-                            {(exam.allowed_apps || []).map((app, index) => (
-                                <div key={index} className="app-item">
-                                    <span className="app-icon">✓</span>
-                                    <span className="app-name">{app}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Camera Monitoring Log */}
-                    {examStarted && (
-                        <CameraLogWindow isActive={cameraMonitoringActive} />
-                    )}
-
-                    {/* Submission Card */}
-                    {examStarted && (
-                        <div className="submission-card">
-                            <div className="card-header">
-                                <span className="card-icon">📤</span>
-                                <h3>Your Work</h3>
-                            </div>
-
-                            {!submissionStatus.submitted ? (
-                                <div className="submission-content">
-                                    <p className="submission-instruction">
-                                        Upload your answer files when ready
-                                    </p>
-                                    <button onClick={handleSubmitExam} className="submit-files-btn">
-                                        📁 Upload Files
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="submission-content">
-                                    <div className="submitted-status">
-                                        <span className="status-icon">✅</span>
-                                        <span className="status-text">Files Submitted</span>
+                        {/* Violations Tab */}
+                        {activeTab === 'violations' && (
+                            <div className="tab-panel violations-panel">
+                                <div className="violations-tab-content">
+                                    {/* Camera Monitoring Log */}
+                                    <div className="violations-section">
+                                        <h3>📹 Camera Monitoring Log</h3>
+                                        <CameraLogWindow isActive={cameraMonitoringActive} />
                                     </div>
-                                    <p className="submitted-time">
-                                        {new Date(submissionStatus.submittedAt!).toLocaleTimeString()}
-                                    </p>
-                                    <div className="submitted-files-summary">
-                                        <p className="files-count">
-                                            {submissionStatus.filesData?.length || 0} file(s) uploaded
+
+                                    {/* Allowed Apps Info */}
+                                    <div className="violations-section">
+                                        <h3>📱 Allowed Applications</h3>
+                                        <div className="allowed-apps-card-full">
+                                            <div className="allowed-apps-list">
+                                                {(exam.allowed_apps || []).length > 0 ? (
+                                                    exam.allowed_apps.map((app, index) => (
+                                                        <div key={index} className="app-item">
+                                                            <span className="app-icon">✓</span>
+                                                            <span className="app-name">{app}</span>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <p className="no-apps">No specific applications allowed</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Monitoring Status Info */}
+                                    <div className="violations-section">
+                                        <h3>👁️ Monitoring Status</h3>
+                                        <div className="monitoring-card-full">
+                                            <div className={`monitoring-indicator-full ${monitoringActive ? 'active' : 'inactive'}`}>
+                                                <span className="status-dot"></span>
+                                                <span>{monitoringActive ? 'Monitoring Active' : 'Monitoring Inactive'}</span>
+                                            </div>
+                                            {monitoringActive && (
+                                                <p className="monitoring-message-full">
+                                                    Your activity is being tracked for academic integrity. Please use only the allowed applications listed above.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Submission Tab */}
+                        {activeTab === 'submission' && (
+                            <div className="tab-panel submission-panel">
+                                <div className="submission-tab-content">
+                                    <div className="submission-header-section">
+                                        <h3>📤 Submit Your Work</h3>
+                                        <p className="submission-description">
+                                            Upload your answer files when you're ready to submit. You can resubmit before the exam ends.
                                         </p>
                                     </div>
-                                    <button onClick={() => setShowConfirmDialog(true)} className="review-btn">
-                                        📋 Review & Confirm
-                                    </button>
+
+                                    {!submissionStatus.submitted ? (
+                                        <div className="submission-form-section">
+                                            <div className="submission-instructions">
+                                                <h4>Instructions:</h4>
+                                                <ul>
+                                                    <li>Select all your answer files</li>
+                                                    <li>You can upload multiple files or a ZIP archive</li>
+                                                    <li>Make sure all files are included before submitting</li>
+                                                    <li>You can resubmit before the exam ends</li>
+                                                </ul>
+                                            </div>
+                                            <button onClick={handleSubmitExam} className="submit-files-btn-large">
+                                                📁 Upload Files
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="submission-status-section">
+                                            <div className="submitted-status-card">
+                                                <div className="submitted-status-header">
+                                                    <span className="status-icon-large">✅</span>
+                                                    <div>
+                                                        <h4>Files Submitted Successfully</h4>
+                                                        <p className="submitted-time-full">
+                                                            Submitted at: {new Date(submissionStatus.submittedAt!).toLocaleString()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="submitted-files-summary-full">
+                                                    <p className="files-count-large">
+                                                        {submissionStatus.filesData?.length || 0} file(s) uploaded
+                                                    </p>
+                                                </div>
+                                                <button onClick={() => setShowConfirmDialog(true)} className="review-btn-large">
+                                                    📋 Review & Confirm Submission
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    )}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Submit Dialog */}
             {showSubmitDialog && (
