@@ -1,28 +1,56 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './CameraTestModule.css';
 
-// TypeScript interfaces for camera status data
+// TypeScript interfaces for camera status data (matches Python output)
 interface CameraStatus {
-  type: string;
+  type?: string;
   timestamp: number;
   frame_number?: number;
   fps?: number;
-  phone_detected?: boolean;
-  phone_confidence?: number;
-  phone_bbox?: number[];
-  person_count?: number;
-  face_detected?: boolean;
-  head_pose?: {
-    yaw: number;
-    pitch: number;
-    roll: number;
+  processing_time_ms?: number;
+  // Nested detection results from Python
+  detections?: {
+    phone?: {
+      detected: boolean;
+      confidence: number;
+      bbox: number[] | null;
+    };
+    persons?: {
+      count: number;
+      bboxes: number[][];
+    };
   };
-  gaze_direction?: string;
-  is_facing_screen?: boolean;
-  blink_detected?: boolean;
-  ear_value?: number;
-  violations?: string[];
-  error?: boolean;
+  face?: {
+    detected: boolean;
+    landmarks_count?: number;
+    head_pose?: {
+      yaw: number;
+      pitch: number;
+      roll: number;
+    };
+    orientation?: string;
+  };
+  gaze?: {
+    direction: string;
+    horizontal_angle?: number;
+    gaze_detected?: boolean;
+    looking_at_screen?: boolean;
+  };
+  blink?: {
+    is_blinking: boolean;
+    left_eye_ear?: number;
+    right_eye_ear?: number;
+    avg_ear?: number;
+  };
+  violations?: {
+    phone_violation?: boolean;
+    multiple_persons?: boolean;
+    no_face_detected?: boolean;
+    not_facing_screen?: boolean;
+    not_looking_at_screen?: boolean;
+  };
+  // Error fields
+  error?: boolean | string;
   error_type?: string;
   message?: string;
 }
@@ -78,8 +106,21 @@ const CameraTestModule: React.FC<CameraTestModuleProps> = ({ onClose }) => {
       typeof (window as any).electronAPI.camera.startTest === 'function';
   }, []);
 
-  // Add violation to log
+  // Track last violation times to prevent flooding
+  const lastViolationTimeRef = useRef<Record<string, number>>({});
+
+  // Add violation to log with debouncing
   const addViolation = useCallback((type: string, message: string, severity: ViolationEvent['severity'] = 'warning') => {
+    // Debounce same type of violations (5 second cooldown, except for system messages)
+    const now = Date.now();
+    const lastTime = lastViolationTimeRef.current[type] || 0;
+    const cooldown = type === 'system' ? 0 : 5000; // No cooldown for system messages
+    
+    if (now - lastTime < cooldown) {
+      return; // Skip if same type was logged recently
+    }
+    lastViolationTimeRef.current[type] = now;
+
     const newViolation: ViolationEvent = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date(),
@@ -99,38 +140,27 @@ const CameraTestModule: React.FC<CameraTestModuleProps> = ({ onClose }) => {
       setFps(status.fps);
     }
 
-    // Check for violations and add to log
-    if (status.violations && status.violations.length > 0) {
-      status.violations.forEach(violation => {
-        addViolation('violation', violation, 'warning');
-      });
-    }
+    // Check for violations from Python processor
+    const violations = status.violations;
+    if (violations) {
+      // Phone violation
+      if (violations.phone_violation) {
+        const confidence = status.detections?.phone?.confidence || 0;
+        addViolation('phone', `Phone detected (${(confidence * 100).toFixed(0)}% confidence)`, 'error');
+      }
 
-    // Check specific violation conditions
-    if (status.phone_detected) {
-      addViolation('phone', `Phone detected (confidence: ${((status.phone_confidence || 0) * 100).toFixed(1)}%)`, 'error');
-    }
-
-    if (status.person_count && status.person_count > 1) {
-      addViolation('person', `Multiple persons detected: ${status.person_count}`, 'error');
-    }
-
-    if (status.person_count === 0 && status.type === 'status') {
-      addViolation('person', 'No person detected in frame', 'warning');
-    }
-
-    if (status.face_detected === false && status.type === 'status') {
-      addViolation('face', 'Face not detected', 'warning');
-    }
-
-    if (status.is_facing_screen === false && status.face_detected) {
-      addViolation('gaze', 'Not facing screen', 'warning');
+      // Multiple persons
+      if (violations.multiple_persons) {
+        const count = status.detections?.persons?.count || 0;
+        addViolation('person', `Multiple persons detected: ${count}`, 'error');
+      }
     }
 
     // Handle error status
     if (status.error) {
-      setError(status.message || 'Unknown error occurred');
-      addViolation('error', status.message || 'Unknown error', 'error');
+      const errorMsg = typeof status.error === 'string' ? status.error : (status.message || 'Unknown error');
+      setError(errorMsg);
+      addViolation('error', errorMsg, 'error');
     }
 
     // Handle ready and shutdown messages
@@ -141,11 +171,49 @@ const CameraTestModule: React.FC<CameraTestModuleProps> = ({ onClose }) => {
     }
   }, [addViolation]);
 
-  // Handle errors from Python processor
+  // Handle errors from Python processor (filter out non-error stderr messages)
   const handleError = useCallback((errorData: any) => {
     const errorMessage = errorData?.message || errorData?.error || 'Unknown error';
-    setError(errorMessage);
-    addViolation('error', errorMessage, 'error');
+    
+    // Filter out non-error messages from stderr
+    // Python logs INFO, DEBUG, WARNING to stderr - these are not actual errors
+    const lowerMessage = errorMessage.toLowerCase();
+    
+    // Skip INFO messages
+    if (lowerMessage.includes(' - info - ') || lowerMessage.includes('- info -')) {
+      return;
+    }
+    
+    // Skip frame processing time warnings (these are normal performance logs)
+    if (lowerMessage.includes('frame processing took') && lowerMessage.includes('max:')) {
+      return;
+    }
+    
+    // Skip TensorFlow/MediaPipe initialization messages
+    if (lowerMessage.includes('tensorflow lite') || 
+        lowerMessage.includes('xnnpack') ||
+        lowerMessage.includes('inference_feedback_manager') ||
+        lowerMessage.includes('landmark_projection_calculator') ||
+        lowerMessage.includes('absl::initializelog')) {
+      return;
+    }
+    
+    // Skip Python frozen runpy warnings
+    if (lowerMessage.includes('<frozen runpy>') || lowerMessage.includes('unpredictable behaviour')) {
+      return;
+    }
+    
+    // Only show actual ERROR level messages or unknown errors
+    if (lowerMessage.includes(' - error - ') || 
+        lowerMessage.includes('exception') || 
+        lowerMessage.includes('traceback') ||
+        (!lowerMessage.includes(' - warning - ') && !lowerMessage.includes(' - debug - '))) {
+      // This might be an actual error
+      if (errorMessage.length > 10 && !lowerMessage.includes('warning')) {
+        setError(errorMessage);
+        addViolation('error', errorMessage, 'error');
+      }
+    }
   }, [addViolation]);
 
   // Handle process exit
@@ -416,14 +484,14 @@ const CameraTestModule: React.FC<CameraTestModuleProps> = ({ onClose }) => {
                   <h4>🔍 Object Detection</h4>
                   <div className="status-row">
                     <span className="status-label">Phone Detected</span>
-                    <span className={`status-indicator ${getStatusClass(currentStatus.phone_detected, true)}`}>
-                      {currentStatus.phone_detected ? '❌ Yes' : '✅ No'}
+                    <span className={`status-indicator ${getStatusClass(currentStatus.detections?.phone?.detected, true)}`}>
+                      {currentStatus.detections?.phone?.detected ? '❌ Yes' : '✅ No'}
                     </span>
                   </div>
                   <div className="status-row">
                     <span className="status-label">Person Count</span>
-                    <span className={`status-indicator ${currentStatus.person_count === 1 ? 'status-good' : 'status-bad'}`}>
-                      {currentStatus.person_count ?? 0}
+                    <span className={`status-indicator ${(currentStatus.detections?.persons?.count ?? 0) === 1 ? 'status-good' : 'status-bad'}`}>
+                      {currentStatus.detections?.persons?.count ?? 0}
                     </span>
                   </div>
                 </div>
@@ -432,32 +500,32 @@ const CameraTestModule: React.FC<CameraTestModuleProps> = ({ onClose }) => {
                   <h4>👤 Face Analysis</h4>
                   <div className="status-row">
                     <span className="status-label">Face Detected</span>
-                    <span className={`status-indicator ${getStatusClass(currentStatus.face_detected)}`}>
-                      {currentStatus.face_detected ? '✅ Yes' : '❌ No'}
+                    <span className={`status-indicator ${getStatusClass(currentStatus.face?.detected)}`}>
+                      {currentStatus.face?.detected ? '✅ Yes' : '❌ No'}
                     </span>
                   </div>
                   <div className="status-row">
                     <span className="status-label">Facing Screen</span>
-                    <span className={`status-indicator ${getStatusClass(currentStatus.is_facing_screen)}`}>
-                      {currentStatus.is_facing_screen ? '✅ Yes' : '❌ No'}
+                    <span className={`status-indicator ${getStatusClass(currentStatus.face?.orientation === 'facing_screen')}`}>
+                      {currentStatus.face?.orientation === 'facing_screen' ? '✅ Yes' : '❌ No'}
                     </span>
                   </div>
                 </div>
 
-                {currentStatus.head_pose && (
+                {currentStatus.face?.head_pose && (
                   <div className="status-section">
                     <h4>🎯 Head Pose</h4>
                     <div className="status-row">
                       <span className="status-label">Yaw</span>
-                      <span className="status-value">{currentStatus.head_pose.yaw.toFixed(1)}°</span>
+                      <span className="status-value">{currentStatus.face.head_pose.yaw.toFixed(1)}°</span>
                     </div>
                     <div className="status-row">
                       <span className="status-label">Pitch</span>
-                      <span className="status-value">{currentStatus.head_pose.pitch.toFixed(1)}°</span>
+                      <span className="status-value">{currentStatus.face.head_pose.pitch.toFixed(1)}°</span>
                     </div>
                     <div className="status-row">
                       <span className="status-label">Roll</span>
-                      <span className="status-value">{currentStatus.head_pose.roll.toFixed(1)}°</span>
+                      <span className="status-value">{currentStatus.face.head_pose.roll.toFixed(1)}°</span>
                     </div>
                   </div>
                 )}
@@ -467,19 +535,19 @@ const CameraTestModule: React.FC<CameraTestModuleProps> = ({ onClose }) => {
                   <div className="status-row">
                     <span className="status-label">Gaze Direction</span>
                     <span className="status-value">
-                      {getGazeIndicator(currentStatus.gaze_direction)} {currentStatus.gaze_direction || 'Unknown'}
+                      {getGazeIndicator(currentStatus.gaze?.direction)} {currentStatus.gaze?.direction || 'Unknown'}
                     </span>
                   </div>
                   <div className="status-row">
                     <span className="status-label">Blink Detected</span>
-                    <span className={`status-indicator ${currentStatus.blink_detected ? 'status-warning' : 'status-good'}`}>
-                      {currentStatus.blink_detected ? '👁️ Yes' : '👀 No'}
+                    <span className={`status-indicator ${currentStatus.blink?.is_blinking ? 'status-warning' : 'status-good'}`}>
+                      {currentStatus.blink?.is_blinking ? '👁️ Yes' : '👀 No'}
                     </span>
                   </div>
-                  {currentStatus.ear_value !== undefined && (
+                  {currentStatus.blink?.avg_ear !== undefined && (
                     <div className="status-row">
                       <span className="status-label">EAR Value</span>
-                      <span className="status-value">{currentStatus.ear_value.toFixed(3)}</span>
+                      <span className="status-value">{currentStatus.blink.avg_ear.toFixed(3)}</span>
                     </div>
                   )}
                 </div>
