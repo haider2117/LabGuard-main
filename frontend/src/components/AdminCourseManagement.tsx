@@ -16,6 +16,7 @@ interface Student {
     username: string;
     full_name: string;
     email: string;
+    role?: string;
 }
 
 interface Teacher {
@@ -23,6 +24,7 @@ interface Teacher {
     username: string;
     full_name: string;
     email: string;
+    role?: string;
 }
 
 const AdminCourseManagement: React.FC = () => {
@@ -66,7 +68,8 @@ const AdminCourseManagement: React.FC = () => {
         try {
             const result = await (window as any).electronAPI.getUsers({ role: 'student' });
             if (result.success) {
-                setAllStudents(result.users || []);
+                const studentsOnly = (result.users || []).filter((u: any) => u.role === 'student');
+                setAllStudents(studentsOnly);
             }
         } catch (error) {
             console.error('Error loading students:', error);
@@ -77,7 +80,8 @@ const AdminCourseManagement: React.FC = () => {
         try {
             const result = await (window as any).electronAPI.getUsers({ role: 'teacher' });
             if (result.success) {
-                setAllTeachers(result.users || []);
+                const teachersOnly = (result.users || []).filter((u: any) => u.role === 'teacher');
+                setAllTeachers(teachersOnly);
             }
         } catch (error) {
             console.error('Error loading teachers:', error);
@@ -273,6 +277,12 @@ const AdminCourseManagement: React.FC = () => {
                         {showEnrollModal && (
                             <div className="enroll-modal">
                                 <h4>Select Student to Enroll</h4>
+                                <button
+                                    className="close-modal-button"
+                                    onClick={() => setShowEnrollModal(false)}
+                                >
+                                    ×
+                                </button>
                                 <div className="students-list">
                                     {getAvailableStudents().length === 0 ? (
                                         <p className="no-data">All students are already enrolled</p>
@@ -293,9 +303,6 @@ const AdminCourseManagement: React.FC = () => {
                                         ))
                                     )}
                                 </div>
-                                <button className="btn-secondary" onClick={() => setShowEnrollModal(false)}>
-                                    Close
-                                </button>
                             </div>
                         )}
 

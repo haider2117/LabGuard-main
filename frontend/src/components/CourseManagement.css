@@ -338,6 +338,23 @@
   margin-top: var(--space-6);
   padding-top: var(--space-6);
   border-top: 1px solid var(--color-border-light);
+  position: relative;
+}
+
+.close-modal-button {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-base);
+}
+
+.close-modal-button:hover {
+  color: var(--color-text-primary);
 }
 
 /* ========== RESPONSIVE ========== */
