@@ -749,7 +749,29 @@ ipcMain.handle('camera:start-test', async (event, options) => {
       return { success: false, error: 'Camera monitoring service not initialized' };
     }
 
-    const result = cameraMonitoringService.startMonitoring(options || {});
+    // Merge options with snapshot configuration from database
+    const snapshotConfig = {
+      snapshotViolations: dbService.getSystemSetting('snapshot_enabled_violations') || ['phone_violation', 'multiple_persons'],
+      snapshotsEnabled: dbService.getSystemSetting('enable_violation_snapshots') !== false
+    };
+
+    // Get current user for student name if available
+    let studentName = 'unknown';
+    const currentUser = authService.getCurrentUser();
+    if (currentUser && currentUser.fullName) {
+      studentName = currentUser.fullName;
+    }
+
+    // Build final options
+    const finalOptions = {
+      ...options,
+      studentName: options?.studentName || studentName,
+      snapshotViolations: snapshotConfig.snapshotsEnabled ? snapshotConfig.snapshotViolations : []
+    };
+
+    console.log('[Camera] Starting with options:', finalOptions);
+
+    const result = cameraMonitoringService.startMonitoring(finalOptions);
     return {
       success: result.success,
       pid: result.pid,
@@ -1667,6 +1689,95 @@ ipcMain.handle('admin:update-system-settings', async (event, settings) => {
     };
   } catch (error) {
     console.error('Update system settings error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+// Snapshot configuration IPC handlers
+ipcMain.handle('admin:get-snapshot-config', async (event) => {
+  try {
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser || currentUser.role !== 'admin') {
+      return {
+        success: false,
+        error: 'Admin access required'
+      };
+    }
+
+    const config = {
+      enabled_violations: dbService.getSystemSetting('snapshot_enabled_violations') || ['phone_violation', 'multiple_persons'],
+      cooldown_seconds: dbService.getSystemSetting('snapshot_cooldown_seconds') || 7,
+      snapshots_enabled: dbService.getSystemSetting('enable_violation_snapshots') !== false
+    };
+
+    return {
+      success: true,
+      config
+    };
+  } catch (error) {
+    console.error('Get snapshot config error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+ipcMain.handle('admin:update-snapshot-config', async (event, config) => {
+  try {
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser || currentUser.role !== 'admin') {
+      return {
+        success: false,
+        error: 'Admin access required'
+      };
+    }
+
+    // Update snapshot settings
+    if (config.enabled_violations !== undefined) {
+      dbService.setSystemSetting(
+        'snapshot_enabled_violations', 
+        config.enabled_violations, 
+        'json', 
+        'List of violations that trigger snapshot capture',
+        currentUser.userId
+      );
+    }
+
+    if (config.cooldown_seconds !== undefined) {
+      dbService.setSystemSetting(
+        'snapshot_cooldown_seconds', 
+        config.cooldown_seconds, 
+        'number', 
+        'Cooldown between snapshots of same violation type',
+        currentUser.userId
+      );
+    }
+
+    if (config.snapshots_enabled !== undefined) {
+      dbService.setSystemSetting(
+        'enable_violation_snapshots', 
+        config.snapshots_enabled, 
+        'boolean', 
+        'Enable/disable violation snapshot capture',
+        currentUser.userId
+      );
+    }
+
+    // Log admin action
+    dbService.logAuditEvent(currentUser.userId, 'SNAPSHOT_CONFIG_UPDATED', {
+      updatedConfig: config
+    });
+
+    return {
+      success: true,
+      message: 'Snapshot configuration updated successfully'
+    };
+  } catch (error) {
+    console.error('Update snapshot config error:', error);
     return {
       success: false,
       error: error.message

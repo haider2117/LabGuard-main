@@ -1,0 +1,482 @@
+.snapshot-config {
+    padding: 20px;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.snapshot-config.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    color: #666;
+}
+
+.snapshot-config .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Header */
+.config-header {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.config-header h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.4rem;
+    color: #333;
+}
+
+.config-description {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Config Sections */
+.config-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: opacity 0.3s ease;
+}
+
+.config-section.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.config-section h4 {
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.section-description {
+    margin: 0 0 15px 0;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+/* Master Toggle */
+.master-toggle {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.master-toggle label {
+    color: white;
+}
+
+.master-toggle small {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.toggle-info {
+    flex: 1;
+}
+
+.toggle-info label {
+    display: block;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.toggle-info small {
+    font-size: 0.8rem;
+}
+
+/* Switch Toggle */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 32px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.3);
+    transition: 0.4s;
+    border-radius: 32px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: rgba(255, 255, 255, 0.6);
+}
+
+input:checked + .slider:before {
+    transform: translateX(28px);
+}
+
+/* Cooldown Section */
+.cooldown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.cooldown-info {
+    flex: 1;
+}
+
+.cooldown-info label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+.cooldown-info small {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.cooldown-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cooldown-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cooldown-btn:hover:not(:disabled) {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.cooldown-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.cooldown-input input {
+    width: 60px;
+    height: 36px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.cooldown-input input:disabled {
+    background: #f0f0f0;
+}
+
+.cooldown-unit {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Violations Grid */
+.violations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.violation-card {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    min-height: 180px;
+}
+
+.violation-card:hover:not(.disabled) {
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.violation-card.enabled {
+    border-color: #28a745;
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f8e9 100%);
+}
+
+.violation-card.disabled {
+    cursor: not-allowed;
+}
+
+.violation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.severity-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 12px;
+}
+
+.severity-high {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.severity-medium {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.severity-low {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.checkbox-indicator {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    transition: all 0.2s ease;
+}
+
+.violation-card.enabled .checkbox-indicator {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+.violation-card h5 {
+    margin: 0 0 8px 0;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.violation-card p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    flex: 1;
+}
+
+/* Summary Section */
+.summary-box {
+    background: white;
+    border-radius: 8px;
+    padding: 15px 20px;
+}
+
+.summary-box h4 {
+    margin: 0 0 12px 0;
+    font-size: 1rem;
+}
+
+.summary-box ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.summary-box > ul > li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9rem;
+}
+
+.summary-box > ul > li:last-child {
+    border-bottom: none;
+}
+
+.summary-box strong {
+    color: #333;
+    margin-right: 8px;
+}
+
+.status-enabled {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.status-disabled {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.active-violations-list {
+    margin-top: 8px;
+    padding-left: 20px;
+    list-style: disc;
+}
+
+.active-violations-list li {
+    padding: 2px 0;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+/* Actions */
+.config-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.save-success {
+    color: #28a745;
+    font-size: 0.9rem;
+    font-weight: 500;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.save-btn {
+    padding: 10px 24px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #e0e0e0;
+    color: #999;
+}
+
+.save-btn.has-changes {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.save-btn.has-changes:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.save-btn:disabled {
+    cursor: not-allowed;
+}
+
+.reset-btn {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    background: white;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.reset-btn:hover:not(:disabled) {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+}
+
+.reset-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .snapshot-config {
+        padding: 15px;
+    }
+    
+    .toggle-row,
+    .cooldown-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .cooldown-input {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .violations-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .config-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .config-actions button {
+        width: 100%;
+    }
+}
+

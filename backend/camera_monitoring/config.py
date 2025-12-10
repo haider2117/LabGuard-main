@@ -167,6 +167,31 @@ ENABLE_BLINK_DETECTION = True
 MULTIPLE_PERSON_THRESHOLD = 2
 
 # ============================================================================
+# VIOLATION SNAPSHOT SETTINGS
+# ============================================================================
+
+# Enable snapshot capture on violations
+ENABLE_VIOLATION_SNAPSHOTS = True
+
+# Snapshot directory path (relative to camera_monitoring folder)
+SNAPSHOT_DIR = str(BASE_DIR / "violation_snapshots")
+
+# Cooldown time between snapshots for the same violation type (seconds)
+# Prevents flooding the folder with too many similar images
+SNAPSHOT_COOLDOWN_SECONDS = 7
+
+# Default violations that trigger snapshots (can be configured by admin)
+# Options: 'phone_violation', 'multiple_persons', 'no_face_detected', 
+#          'not_facing_screen', 'not_looking_at_screen'
+DEFAULT_SNAPSHOT_VIOLATIONS = ['phone_violation', 'multiple_persons']
+
+# JPEG quality for snapshots (1-100, higher = better quality, larger file)
+SNAPSHOT_JPEG_QUALITY = 85
+
+# Maximum snapshots per exam session (0 = unlimited)
+MAX_SNAPSHOTS_PER_SESSION = 100
+
+# ============================================================================
 # LOGGING SETTINGS
 # ============================================================================
 

@@ -44,6 +44,32 @@ interface ElectronAPI {
   getSystemSettings: () => Promise<any>;
   updateSystemSettings: (settings: any) => Promise<any>;
   
+  // Snapshot configuration methods (admin)
+  getSnapshotConfig: () => Promise<{
+    success: boolean;
+    config?: {
+      enabled_violations: string[];
+      cooldown_seconds: number;
+      snapshots_enabled: boolean;
+    };
+    error?: string;
+  }>;
+  updateSnapshotConfig: (config: {
+    enabled_violations?: string[];
+    cooldown_seconds?: number;
+    snapshots_enabled?: boolean;
+  }) => Promise<{ success: boolean; message?: string; error?: string }>;
+  
+  // Camera monitoring methods
+  camera: {
+    startTest: (options?: any) => Promise<any>;
+    stopTest: () => Promise<any>;
+    getStatus: () => Promise<any>;
+    onStatusUpdate: (callback: (data: any) => void) => () => void;
+    onError: (callback: (error: any) => void) => () => void;
+    onProcessExit: (callback: (data: any) => void) => () => void;
+  };
+  
   // Event listeners
   onMonitoringEvent: (callback: (...args: any[]) => void) => () => void;
 }

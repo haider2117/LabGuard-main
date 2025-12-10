@@ -72,6 +72,7 @@
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   display: flex;
   gap: var(--space-2);
+  justify-content: center;
   overflow-x: auto;
   position: sticky;
   top: 88px;
@@ -229,6 +230,8 @@
 
 .users-table .user-actions .btn {
   flex: 0 0 auto;
+  min-width: 90px;
+  text-align: center;
 }
 
 .users-table .user-actions .btn-primary {
@@ -369,6 +372,7 @@
 
 .users-tab h2,
 .settings-tab h2,
+.camera-tab h2,
 .stats-tab h2,
 .logs-tab h2 {
   font-size: var(--text-2xl);
@@ -831,6 +835,19 @@
 
 .settings-tab {
   animation: fadeIn 0.3s ease;
+}
+
+.camera-tab {
+  animation: fadeIn 0.3s ease;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.camera-tab .tab-description {
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  margin-bottom: var(--space-6);
+  line-height: 1.6;
 }
 
 .logs-tab {

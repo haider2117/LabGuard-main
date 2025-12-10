@@ -67,6 +67,8 @@ class CameraMonitoringService extends EventEmitter {
    * @param {boolean} options.enableDisplay - Show OpenCV window
    * @param {boolean} options.enableFrameTransmission - Send frames as base64
    * @param {boolean} options.debug - Enable debug logging
+   * @param {string} options.studentName - Student name for snapshot naming
+   * @param {string[]} options.snapshotViolations - List of violations that trigger snapshots
    * @returns {Object} Result object with success status, pid, and args
    */
   startMonitoring(options = {}) {
@@ -95,6 +97,14 @@ class CameraMonitoringService extends EventEmitter {
       }
       if (options.debug) {
         args.push('--debug');
+      }
+      // Add student name for snapshot naming
+      if (options.studentName) {
+        args.push('--student-name', options.studentName);
+      }
+      // Add snapshot violations configuration
+      if (options.snapshotViolations && options.snapshotViolations.length > 0) {
+        args.push('--snapshot-violations', options.snapshotViolations.join(','));
       }
 
       console.log('[CameraMonitoringService] Starting Python process:', {

@@ -27,8 +27,9 @@ import signal
 import argparse
 import logging
 import base64
+import os
 import numpy as np
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Set
 from datetime import datetime
 
 # Import configuration
@@ -69,7 +70,9 @@ class CameraProcessor:
         self,
         camera_index: int = None,
         enable_display: bool = False,
-        enable_frame_transmission: bool = None
+        enable_frame_transmission: bool = None,
+        student_name: str = "unknown",
+        snapshot_violations: list = None
     ):
         """
         Initialize the CameraProcessor.
@@ -78,6 +81,8 @@ class CameraProcessor:
             camera_index: Camera device index (default: from config)
             enable_display: Show OpenCV window with detections (default: False)
             enable_frame_transmission: Send frames as base64 in JSON (default: from config)
+            student_name: Name of the student for snapshot naming
+            snapshot_violations: List of violation types that should trigger snapshots
         """
         self.camera_index = camera_index if camera_index is not None else config.CAMERA_INDEX
         self.enable_display = enable_display
@@ -85,6 +90,18 @@ class CameraProcessor:
             enable_frame_transmission if enable_frame_transmission is not None 
             else config.ENABLE_FRAME_TRANSMISSION
         )
+        
+        # Student info for snapshots
+        self.student_name = student_name.replace(" ", "_") if student_name else "unknown"
+        
+        # Snapshot configuration
+        self.snapshot_violations: Set[str] = set(
+            snapshot_violations if snapshot_violations is not None 
+            else config.DEFAULT_SNAPSHOT_VIOLATIONS
+        )
+        self.snapshot_cooldowns: Dict[str, float] = {}  # violation_type -> last_snapshot_time
+        self.snapshot_count = 0
+        self._ensure_snapshot_dir()
         
         # Components
         self.camera: Optional[cv2.VideoCapture] = None
@@ -103,7 +120,8 @@ class CameraProcessor:
         # Shutdown handling
         self._setup_signal_handlers()
         
-        logger.info(f"CameraProcessor created (camera_index={self.camera_index})")
+        logger.info(f"CameraProcessor created (camera_index={self.camera_index}, student={self.student_name})")
+        logger.info(f"Snapshot violations enabled: {self.snapshot_violations}")
     
     def _setup_signal_handlers(self):
         """Setup signal handlers for graceful shutdown."""
@@ -118,6 +136,123 @@ class CameraProcessor:
         """Handle shutdown signals."""
         logger.info(f"Received signal {signum}, initiating shutdown...")
         self.running = False
+    
+    def _ensure_snapshot_dir(self):
+        """Ensure the snapshot directory exists."""
+        try:
+            if not os.path.exists(config.SNAPSHOT_DIR):
+                os.makedirs(config.SNAPSHOT_DIR)
+                logger.info(f"Created snapshot directory: {config.SNAPSHOT_DIR}")
+        except Exception as e:
+            logger.error(f"Failed to create snapshot directory: {e}")
+    
+    def _can_take_snapshot(self, violation_type: str) -> bool:
+        """
+        Check if a snapshot can be taken for this violation type (respecting cooldown).
+        
+        Args:
+            violation_type: Type of violation (e.g., 'phone_violation', 'multiple_persons')
+        
+        Returns:
+            bool: True if cooldown has passed and snapshot can be taken
+        """
+        if not config.ENABLE_VIOLATION_SNAPSHOTS:
+            return False
+        
+        if violation_type not in self.snapshot_violations:
+            return False
+        
+        if config.MAX_SNAPSHOTS_PER_SESSION > 0 and self.snapshot_count >= config.MAX_SNAPSHOTS_PER_SESSION:
+            logger.warning(f"Maximum snapshots per session ({config.MAX_SNAPSHOTS_PER_SESSION}) reached")
+            return False
+        
+        current_time = time.time()
+        last_snapshot_time = self.snapshot_cooldowns.get(violation_type, 0)
+        
+        if current_time - last_snapshot_time < config.SNAPSHOT_COOLDOWN_SECONDS:
+            return False
+        
+        return True
+    
+    def _take_snapshot(self, frame: np.ndarray, violation_type: str) -> Optional[str]:
+        """
+        Take a snapshot of the current frame for a violation.
+        
+        Args:
+            frame: Current video frame
+            violation_type: Type of violation that triggered the snapshot
+        
+        Returns:
+            str: Path to saved snapshot file, or None if failed
+        """
+        try:
+            # Generate filename: studentname_violationtype_timestamp.jpg
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            violation_name = violation_type.replace('_', '-')
+            filename = f"{self.student_name}_{violation_name}_{timestamp}.jpg"
+            filepath = os.path.join(config.SNAPSHOT_DIR, filename)
+            
+            # Save the snapshot
+            success = cv2.imwrite(
+                filepath, 
+                frame, 
+                [cv2.IMWRITE_JPEG_QUALITY, config.SNAPSHOT_JPEG_QUALITY]
+            )
+            
+            if success:
+                # Update cooldown tracker
+                self.snapshot_cooldowns[violation_type] = time.time()
+                self.snapshot_count += 1
+                
+                logger.info(f"Snapshot saved: {filename} (total: {self.snapshot_count})")
+                return filepath
+            else:
+                logger.error(f"Failed to save snapshot: {filepath}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error taking snapshot: {e}")
+            return None
+    
+    def _process_violation_snapshots(self, frame: np.ndarray, violations: Dict[str, bool]) -> Dict[str, Any]:
+        """
+        Process violations and take snapshots if needed.
+        
+        Args:
+            frame: Current video frame
+            violations: Dictionary of violation flags
+        
+        Returns:
+            Dict with snapshot information
+        """
+        snapshot_info = {
+            'snapshot_taken': False,
+            'snapshot_violations': [],
+            'snapshot_paths': []
+        }
+        
+        if not config.ENABLE_VIOLATION_SNAPSHOTS:
+            return snapshot_info
+        
+        for violation_type, is_active in violations.items():
+            if is_active and self._can_take_snapshot(violation_type):
+                snapshot_path = self._take_snapshot(frame, violation_type)
+                if snapshot_path:
+                    snapshot_info['snapshot_taken'] = True
+                    snapshot_info['snapshot_violations'].append(violation_type)
+                    snapshot_info['snapshot_paths'].append(snapshot_path)
+        
+        return snapshot_info
+    
+    def update_snapshot_config(self, violations: list):
+        """
+        Update which violations should trigger snapshots.
+        
+        Args:
+            violations: List of violation type strings
+        """
+        self.snapshot_violations = set(violations)
+        logger.info(f"Updated snapshot violations: {self.snapshot_violations}")
     
     def initialize(self) -> bool:
         """
@@ -322,6 +457,10 @@ class CameraProcessor:
             
             # Calculate violations
             results['violations'] = self._calculate_violations(results)
+            
+            # Process violation snapshots
+            snapshot_info = self._process_violation_snapshots(frame, results['violations'])
+            results['snapshot'] = snapshot_info
             
             # Add frame data if enabled
             if self.enable_frame_transmission:
@@ -631,6 +770,18 @@ def main():
         action='store_true',
         help='Enable debug logging'
     )
+    parser.add_argument(
+        '--student-name', '-s',
+        type=str,
+        default='unknown',
+        help='Student name for snapshot file naming'
+    )
+    parser.add_argument(
+        '--snapshot-violations',
+        type=str,
+        default=None,
+        help='Comma-separated list of violations that trigger snapshots (e.g., "phone_violation,multiple_persons")'
+    )
     
     args = parser.parse_args()
     
@@ -639,11 +790,18 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
         logger.setLevel(logging.DEBUG)
     
+    # Parse snapshot violations
+    snapshot_violations = None
+    if args.snapshot_violations:
+        snapshot_violations = [v.strip() for v in args.snapshot_violations.split(',')]
+    
     # Create and run processor
     with CameraProcessor(
         camera_index=args.camera,
         enable_display=args.display,
-        enable_frame_transmission=args.transmit_frames
+        enable_frame_transmission=args.transmit_frames,
+        student_name=args.student_name,
+        snapshot_violations=snapshot_violations
     ) as processor:
         
         if processor.initialize():

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AdminCourseManagement from './AdminCourseManagement';
 import FaceCapture from './FaceCapture';
+import SnapshotConfig from './SnapshotConfig';
 import './AdminDashboard.css';
 
 interface User {
@@ -25,7 +26,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onLogout }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'users' | 'courses' | 'settings' | 'logs' | 'stats'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'courses' | 'settings' | 'camera' | 'stats'>('users');
 
     // Settings state
     const [systemSettings, setSystemSettings] = useState({
@@ -36,9 +37,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onLogout }) => {
 
     // Statistics state
     const [faceStats, setFaceStats] = useState<any>(null);
-
-    // Audit logs state
-    const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
     // Modal states
     const [showUserForm, setShowUserForm] = useState(false);
@@ -100,18 +98,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onLogout }) => {
             }
         } catch (err) {
             console.error('Load face stats error:', err);
-        }
-    }, []);
-
-    // Load audit logs
-    const loadAuditLogs = useCallback(async () => {
-        try {
-            const result = await window.electronAPI.getAuditLogs({ limit: 100 });
-            if (result.success) {
-                setAuditLogs(result.logs);
-            }
-        } catch (err) {
-            console.error('Load audit logs error:', err);
         }
     }, []);
 
@@ -305,8 +291,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onLogout }) => {
         loadUsers();
         loadSystemSettings();
         loadFaceStats();
-        loadAuditLogs();
-    }, [loadUsers, loadSystemSettings, loadFaceStats, loadAuditLogs]);
+    }, [loadUsers, loadSystemSettings, loadFaceStats]);
 
     return (
         <div className="admin-dashboard">
@@ -340,16 +325,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onLogout }) => {
                     Settings
                 </button>
                 <button
+                    className={`tab ${activeTab === 'camera' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('camera')}
+                >
+                    Camera
+                </button>
+                <button
                     className={`tab ${activeTab === 'stats' ? 'active' : ''}`}
                     onClick={() => setActiveTab('stats')}
                 >
                     Statistics
-                </button>
-                <button
-                    className={`tab ${activeTab === 'logs' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('logs')}
-                >
-                    Audit Logs
                 </button>
             </nav>
 
@@ -528,6 +513,17 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onLogout }) => {
                     </div>
                 )}
 
+                {activeTab === 'camera' && (
+                    <div className="camera-tab">
+                        <h2>Camera Monitoring Configuration</h2>
+                        <p className="tab-description">
+                            Configure violation snapshot settings for the camera monitoring system.
+                            These settings control when and how snapshots are captured as proof of violations.
+                        </p>
+                        <SnapshotConfig onError={(err) => setError(err)} />
+                    </div>
+                )}
+
                 {activeTab === 'stats' && (
                     <div className="stats-tab">
                         <h2>System Statistics</h2>
@@ -558,43 +554,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onLogout }) => {
                     </div>
                 )}
 
-                {activeTab === 'logs' && (
-                    <div className="logs-tab">
-                        <h2>Audit Logs</h2>
-
-                        <div className="logs-table-container">
-                            <table className="logs-table">
-                                <thead>
-                                    <tr>
-                                        <th>Timestamp</th>
-                                        <th>User</th>
-                                        <th>Action</th>
-                                        <th>Details</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {auditLogs.map((log, index) => (
-                                        <tr key={index}>
-                                            <td>{new Date(log.timestamp).toLocaleString()}</td>
-                                            <td>{log.username || 'System'}</td>
-                                            <td>
-                                                <span className={`action-badge action-${log.action.toLowerCase().replace('_', '-')}`}>
-                                                    {log.action}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                {log.details && typeof log.details === 'object'
-                                                    ? JSON.stringify(log.details, null, 2)
-                                                    : log.details || '-'
-                                                }
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* User Form Modal */}
